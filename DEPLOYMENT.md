@@ -39,10 +39,11 @@ Set these in **Netlify Dashboard → Site settings → Environment variables**:
 1. Go to [app.netlify.com](https://app.netlify.com) → Add new site → Import from Git
 2. Select your repository
 3. Build settings are read from `netlify.toml`; no changes needed if using defaults:
-   - **Build command**: `cd frontend && npm run build`
+   - **Build command**: `cd frontend && npm install && npm run build`
    - **Publish directory**: `frontend/out`
-4. Add environment variables (see above)
-5. Deploy
+4. **Python API (optional):** To run the FastAPI backend as a Netlify serverless function, add the **Python** build plugin in Netlify: **Build & deploy → Build plugins → Add plugin → search "Python"** and install. Without it, only the static frontend deploys; host the API elsewhere (e.g. Railway, Render) and set `NEXT_PUBLIC_API_URL` to that URL.
+5. Add environment variables (see above)
+6. Deploy
 
 ### Frontend API URL
 

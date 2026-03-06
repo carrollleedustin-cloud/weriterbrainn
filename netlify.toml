@@ -6,9 +6,8 @@
   NODE_VERSION = "20"
   PYTHON_VERSION = "3.11"
 
-[[plugins]]
-  package = "@netlify/plugin-python-core"
-
+# Python functions: install the "Python" plugin in Netlify UI (Build & deploy > Build plugins)
+# or add @netlify/plugin-python-core to root package.json devDependencies if available.
 [functions]
   directory = "netlify/functions"
 
