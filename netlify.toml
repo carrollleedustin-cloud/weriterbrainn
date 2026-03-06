@@ -9,7 +9,7 @@
 [[plugins]]
   package = "@netlify/plugin-python-core"
 
-[[functions]]
+[functions]
   directory = "netlify/functions"
   runtime = "python3.11"
 
