@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        env:
+          OPENAI_API_KEY: "sk-test-dummy"
+          DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost:5432/weriterbrainn_test"
+        run: pytest --tb=short -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: cd frontend && npm install
+
+      - name: Run frontend tests
+        run: cd frontend && npm test -- --passWithNoTests
+
+      - name: Build frontend
+        run: cd frontend && npm run build

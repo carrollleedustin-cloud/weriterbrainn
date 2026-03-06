@@ -1,0 +1,39 @@
+[build]
+  publish = "frontend/out"
+  command = "cd frontend && npm install && npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PYTHON_VERSION = "3.11"
+
+[[plugins]]
+  package = "@netlify/plugin-python-core"
+
+[[functions]]
+  directory = "netlify/functions"
+  runtime = "python3.11"
+
+# Route API requests to the FastAPI handler
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/docs"
+  to = "/.netlify/functions/api/docs"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/redoc"
+  to = "/.netlify/functions/api/redoc"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/openapi.json"
+  to = "/.netlify/functions/api/openapi.json"
+  status = 200
+  force = true
