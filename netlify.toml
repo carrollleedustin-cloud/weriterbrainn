@@ -11,7 +11,6 @@
 
 [functions]
   directory = "netlify/functions"
-  runtime = "python3.11"
 
 # Route API requests to the FastAPI handler
 [[redirects]]
