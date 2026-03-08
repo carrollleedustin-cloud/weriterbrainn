@@ -84,21 +84,21 @@ export default function CastPage() {
                 <div className="space-y-4">
                   <h2 className="text-lg font-medium text-[var(--fg-primary)]">{details.name ?? selected.name}</h2>
                   {details.summary && <p className="text-sm text-[var(--fg-muted)]">{details.summary}</p>}
-                  {(details.metadata?.goals ?? details.goals)?.length ? (
+                  {(details.metadata?.goals ?? [])?.length ? (
                     <div>
                       <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Goals</h3>
                       <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
-                        {(details.metadata?.goals ?? details.goals ?? []).map((g: string, i: number) => (
+                        {(details.metadata?.goals ?? []).map((g, i) => (
                           <li key={i}>• {g}</li>
                         ))}
                       </ul>
                     </div>
                   ) : null}
-                  {(details.metadata?.fears ?? details.fears)?.length ? (
+                  {(details.metadata?.fears ?? [])?.length ? (
                     <div>
                       <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Fears</h3>
                       <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
-                        {(details.metadata?.fears ?? details.fears ?? []).map((f: string, i: number) => (
+                        {(details.metadata?.fears ?? []).map((f, i) => (
                           <li key={i}>• {f}</li>
                         ))}
                       </ul>
