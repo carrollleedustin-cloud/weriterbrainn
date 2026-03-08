@@ -1,37 +1,28 @@
 [build]
   publish = "frontend/out"
-  command = "cd frontend && npm install && npm run build"
+  command = "npm install && cd frontend && npm install && npm run build"
 
 [build.environment]
-  NODE_VERSION = "20"
-  PYTHON_VERSION = "3.11"
+  NODE_VERSION = "22"
 
-# Python functions: install the "Python" plugin in Netlify UI (Build & deploy > Build plugins)
-# or add @netlify/plugin-python-core to root package.json devDependencies if available.
 [functions]
   directory = "netlify/functions"
 
-# Route API requests to the FastAPI handler
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api"
   status = 200
   force = true
 
-[[redirects]]
-  from = "/docs"
-  to = "/.netlify/functions/api/docs"
-  status = 200
-  force = true
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
 
-[[redirects]]
-  from = "/redoc"
-  to = "/.netlify/functions/api/redoc"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/openapi.json"
-  to = "/.netlify/functions/api/openapi.json"
-  status = 200
-  force = true
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

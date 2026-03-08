@@ -6,25 +6,69 @@ on:
   pull_request:
     branches: [main, develop]
 
+env:
+  NODE_VERSION: "22"
+
 jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.11"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Verify API loads
+        run: npm run verify:api
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: weriterbrainn_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm ci
 
-      - name: Run pytest
+      - name: Run migrations up
         env:
-          OPENAI_API_KEY: "sk-test-dummy"
-          DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost:5432/weriterbrainn_test"
-        run: pytest --tb=short -q
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/weriterbrainn_test
+        run: npm run migrate:up
+
+      - name: Run migrations down
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/weriterbrainn_test
+        run: npm run migrate:down
+
+      - name: Run migrations up (verify idempotent)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/weriterbrainn_test
+        run: npm run migrate:up
 
   frontend:
     runs-on: ubuntu-latest
@@ -34,10 +78,11 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
       - name: Install dependencies
-        run: cd frontend && npm install
+        run: npm ci && cd frontend && npm ci
 
       - name: Run frontend tests
         run: cd frontend && npm test -- --passWithNoTests

@@ -4,5 +4,7 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"agentSystem.groq.model": "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"
+	}
 }

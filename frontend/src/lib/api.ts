@@ -1,4 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/** Same-origin when unset (Netlify /api/*); override for local dev or custom API. */
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function apiHeaders(extra: Record<string, string> = {}): Record<string, string> {
   const token =

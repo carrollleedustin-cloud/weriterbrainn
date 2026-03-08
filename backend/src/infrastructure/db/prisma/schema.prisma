@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enable pgvector via SQL migration in Prisma migrations later
+// Using raw SQL in migrations to create extension and indexes
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  conversations Conversation[]
+  memories      Memory[]
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+  messages  Message[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // 'user' | 'assistant' | 'system'
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+enum MemoryType {
+  EPISODIC
+  SEMANTIC
+  PROJECT
+  GOAL
+  BELIEF
+}
+
+enum MemoryTier {
+  SHORT_TERM
+  LONG_TERM
+}
+
+model Memory {
+  id            String     @id @default(cuid())
+  userId        String
+  type          MemoryType
+  content       String
+  embedding     Bytes?     // pgvector mapped via raw column + Bytes until prisma supports native type well
+  importance    Float      @default(0)
+  tier          MemoryTier @default(SHORT_TERM)
+  tags          String[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  metadata      Json?
+
+  user          User       @relation(fields: [userId], references: [id])
+
+  @@index([userId, type])
+  @@index([createdAt])
+}
+
+model Entity {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String
+  name          String
+  canonicalName String
+  key           String   @unique
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, type])
+  @@index([userId, canonicalName])
+}
+
+model EntityAlias {
+  id       String @id @default(cuid())
+  entityId String
+  alias    String
+
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, alias])
+}
+
+model Relationship {
+  id       String  @id @default(cuid())
+  userId   String
+  type     String
+  fromId   String
+  toId     String
+  weight   Float?  @default(0)
+  metadata Json?
+  createdAt DateTime @default(now())
+
+  from     Entity @relation("RelFrom", fields: [fromId], references: [id])
+  to       Entity @relation("RelTo", fields: [toId], references: [id])
+
+  @@index([userId, type])
+  @@index([fromId, toId])
+}
+
+model MemoryEntity {
+  id       String @id @default(cuid())
+  memoryId String
+  entityId String
+  userId   String
+  metadata Json?
+
+  memory   Memory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([memoryId, entityId])
+  @@index([userId, entityId])
+}
+
+model PersonaProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  metrics      Json     // aggregated metrics (sentence length dist, type-token ratio, tone/sentiment, vocab)
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+}
+
+model FeedbackEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  eventType  String   // accepted | regenerated | edited | corrected
+  context    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, eventType])
+  @@index([createdAt])
+}
+
+model UserRetrievalStrategy {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  arm            String   // e.g., 'baseline', 'rerank-heavy', 'recency-boost'
+  weights        Json     // { vector, fts, importance, recency }
+  rerankEnabled  Boolean  @default(false)
+  llmRewriteEnabled Boolean @default(true)
+  maxVariants    Int      @default(5)
+  tokenBudget    Int      @default(1024)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+}

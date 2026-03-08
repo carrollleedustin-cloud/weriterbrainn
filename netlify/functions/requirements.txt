@@ -1,2 +1,0 @@
-# Dependencies for Netlify serverless function
--r ../../requirements.txt

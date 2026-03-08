@@ -1,0 +1,27 @@
+{
+  "name": "weriterbrainn",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "node server/dev.js",
+    "build": "cd frontend && npm run build",
+    "verify:api": "node scripts/verify-api.mjs",
+    "migrate": "node-pg-migrate",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate:create": "node-pg-migrate create"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "openai": "^4.67.0",
+    "pg": "^8.13.1",
+    "pgvector": "^0.2.0",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^8.0.4"
+  }
+}

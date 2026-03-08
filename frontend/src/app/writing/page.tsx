@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { chatJson, recordPersonaSample } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Input";
 
 export default function WritingPage() {
   const [text, setText] = useState("");
@@ -34,51 +36,58 @@ export default function WritingPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-zinc-50">Writing Assistant</h1>
-      <p className="text-zinc-400">
-        Paste your text and use AI to improve, expand, or rewrite it. The assistant uses your persona metrics to match your style.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-[var(--fg-primary)]">Writing Studio</h1>
+          <p className="text-[var(--fg-secondary)]">
+            Imprint your voice. Expand, refine, or rewrite with your cognitive signature.
+          </p>
+        </div>
+        <div className="rounded-full border border-[rgba(139,92,246,0.3)] bg-[rgba(139,92,246,0.12)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--fg-secondary)]">
+          Persona Sync
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div>
-          <label className="mb-2 block text-sm text-zinc-400">Your text</label>
-          <textarea
+        <div className="space-y-3">
+          <label className="text-sm text-[var(--fg-muted)]">Your text</label>
+          <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Paste or write here..."
-            rows={12}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
+            rows={14}
+            className="min-h-[320px]"
           />
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
+          <div className="flex flex-wrap gap-2">
+            <Button
               onClick={() => run("Improve this text for clarity and flow.")}
               disabled={loading || !text.trim()}
-              className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-600 disabled:opacity-50"
+              variant="secondary"
             >
               {loading && action === "improve" ? "..." : "Improve"}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => run("Expand and elaborate on these ideas.")}
               disabled={loading || !text.trim()}
-              className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-600 disabled:opacity-50"
+              variant="secondary"
             >
               {loading && action === "expand" ? "..." : "Expand"}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => run("Rewrite this text")}
               disabled={loading || !text.trim()}
-              className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-600 disabled:opacity-50"
+              variant="secondary"
             >
               {loading && action === "rewrite" ? "..." : "Rewrite"}
-            </button>
+            </Button>
           </div>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm text-zinc-400">AI suggestion</label>
-          <div className="min-h-[280px] rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-zinc-300">
+        <div className="space-y-3">
+          <label className="text-sm text-[var(--fg-muted)]">AI suggestion</label>
+          <div className="min-h-[320px] rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.25)] bg-[var(--bg-overlay)]/70 px-4 py-3 text-[var(--fg-secondary)] shadow-[var(--shadow-sm)]">
             {loading && !suggestion ? (
-              <span className="text-zinc-500">Thinking...</span>
+              <span className="text-[var(--fg-muted)]">Thinking...</span>
             ) : suggestion ? (
               <div
                 className="cursor-pointer whitespace-pre-wrap"
@@ -89,25 +98,27 @@ export default function WritingPage() {
                 {suggestion}
               </div>
             ) : (
-              <span className="text-zinc-500">Result will appear here</span>
+              <span className="text-[var(--fg-muted)]">Result will appear here</span>
             )}
           </div>
           {suggestion && (
-            <button
+            <Button
               onClick={() => {
                 setText(suggestion);
                 setSuggestion("");
               }}
-              className="mt-2 rounded-lg bg-zinc-700 px-3 py-1.5 text-sm hover:bg-zinc-600"
+              variant="ghost"
             >
               Use this
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-900/30 p-2 text-red-400">{error}</div>
+        <div className="rounded-[var(--radius-md)] border border-red-500/30 bg-red-500/10 p-2 text-red-300">
+          {error}
+        </div>
       )}
     </div>
   );
