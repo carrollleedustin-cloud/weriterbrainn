@@ -1,16 +1,18 @@
 import OpenAI from "openai";
 import { config } from "../../config.js";
 import { KnowledgeGraphRepository } from "../repositories/KnowledgeGraphRepository.js";
+import { nameSimilarity } from "../lib/entityDedup.js";
 
 const EXTRACTION_PROMPT = `Extract structured entities and relationships from the following text.
 
-For each entity, provide: name, type (one of: person, concept, project, event, other), optional description.
-For each relationship, provide: source_entity_name, target_entity_name, relationship_type (e.g. "works_on", "knows", "part_of", "related_to").
+For each entity: name, type (person|concept|project|event|other), optional description.
+For events: also add "temporal" with date/time if mentioned (e.g. "2020", "last week", "Q1 2023").
+For each relationship: source_entity_name, target_entity_name, relationship_type.
 
 Respond with valid JSON only, no markdown:
 {
   "entities": [
-    {"name": "...", "type": "person|concept|project|event|other", "description": "..."}
+    {"name": "...", "type": "person|concept|project|event|other", "description": "...", "temporal": "..."}
   ],
   "relationships": [
     {"source": "Entity A", "target": "Entity B", "type": "relationship_type"}
@@ -27,9 +29,12 @@ function getClient() {
   return client;
 }
 
+const SIMILARITY_THRESHOLD = 0.82;
+
 export class ExtractionService {
-  constructor({ knowledgeGraphRepository }) {
+  constructor({ knowledgeGraphRepository, embeddingService }) {
     this.kgRepo = knowledgeGraphRepository;
+    this.embeddingService = embeddingService;
   }
 
   async extractEntitiesAndRelations(text) {
@@ -51,6 +56,7 @@ export class ExtractionService {
       const entities = (data.entities || []).map((e) => ({
         ...e,
         node_type: (e.type || "other").toLowerCase(),
+        temporal: e.temporal || null,
       }));
       const relationships = data.relationships || [];
       return { entities, relationships };
@@ -61,20 +67,20 @@ export class ExtractionService {
 
   async addToGraph(entities, relationships, userId) {
     const nameToNode = {};
+    const existingNodes = await this.kgRepo.findAllNodeNames(userId);
+
     for (const e of entities) {
       const name = (e.name || "").trim();
       if (!name) continue;
-      let node = await this.kgRepo.findNodeByNameAndUser(name, userId);
-      if (!node) {
-        node = await this.kgRepo.createNode({
-          userId,
-          name,
-          nodeType: e.node_type || e.type,
-          description: e.description,
-        });
+      const resolved = await this.resolveEntity(name, e, existingNodes, userId);
+      if (resolved) {
+        nameToNode[name.toLowerCase()] = resolved.node;
+        resolved.node.name = resolved.name;
+        resolved.node.description = resolved.description;
       }
-      nameToNode[name.toLowerCase()] = node;
     }
+
+    const entityIds = new Set(Object.values(nameToNode).map((n) => n.id));
     for (const rel of relationships) {
       const srcName = (rel.source || "").trim().toLowerCase();
       const tgtName = (rel.target || "").trim().toLowerCase();
@@ -87,6 +93,65 @@ export class ExtractionService {
           await this.kgRepo.createEdge(srcNode.id, tgtNode.id, relType);
         }
       }
+    }
+
+    await this.inferRelationships(entityIds, userId);
+
+    for (const node of Object.values(nameToNode)) {
+      await this.maybeEmbedNode(node.id, node.name, node.description);
+    }
+  }
+
+  async resolveEntity(name, entity, existingNodes, userId) {
+    let node = await this.kgRepo.findNodeByNameAndUser(name, userId);
+    if (node) return { node, name, description: node.description };
+    for (const ex of existingNodes) {
+      if (nameSimilarity(name, ex.name) >= SIMILARITY_THRESHOLD) {
+        return { node: ex, name: ex.name, description: ex.description };
+      }
+    }
+    const metadata = entity.temporal ? { temporal: entity.temporal } : null;
+    const desc = entity.description || (entity.temporal ? `(Occurred: ${entity.temporal})` : null);
+    const created = await this.kgRepo.createNode({
+      userId,
+      name,
+      nodeType: entity.node_type || entity.type,
+      description: desc,
+      metadata,
+    });
+    const newNode = { id: created.id, name, description: desc };
+    existingNodes.push(newNode);
+    return { node: newNode, name, description: desc };
+  }
+
+  async inferRelationships(entityIds, userId) {
+    const ids = [...entityIds];
+    let inferred = 0;
+    const maxInferred = 15;
+    for (let i = 0; i < ids.length && inferred < maxInferred; i++) {
+      for (let j = i + 1; j < ids.length && inferred < maxInferred; j++) {
+        const a = ids[i];
+        const b = ids[j];
+        const exists = await this.kgRepo.edgeExists(a, b, "related_to");
+        if (!exists) {
+          await this.kgRepo.createEdge(a, b, "related_to");
+          inferred++;
+        }
+      }
+    }
+  }
+
+  async maybeEmbedNode(nodeId, name, description) {
+    if (!this.embeddingService || !config.openaiApiKey) return;
+    try {
+      const text = [name, description].filter(Boolean).join(" ");
+      if (!text.trim()) return;
+      const emb = await this.embeddingService.embedText(text);
+      if (emb?.length === config.embeddingDim) {
+        await this.kgRepo.updateNodeEmbedding(nodeId, emb);
+      }
+    } catch {
+      /* skip */
     }
   }
 }

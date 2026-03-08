@@ -11,6 +11,7 @@ import authRouter from "./src/modules/auth/routes.js";
 import memoryRouter from "./src/modules/memory/routes.js";
 import chatRouter from "./src/modules/chat/routes.js";
 import graphRouter from "./src/modules/knowledge-graph/routes.js";
+import narrativeRouter from "./src/modules/narrative/routes.js";
 import personaRouter from "./src/modules/persona/routes.js";
 import analyticsRouter from "./src/modules/analytics/routes.js";
 
@@ -39,6 +40,7 @@ app.use(`${config.apiV1Prefix}/auth`, authRouter);
 app.use(`${config.apiV1Prefix}/memories`, memoryRouter);
 app.use(`${config.apiV1Prefix}/chat`, chatRouter);
 app.use(`${config.apiV1Prefix}/graph`, graphRouter);
+app.use(`${config.apiV1Prefix}/narrative`, narrativeRouter);
 app.use(`${config.apiV1Prefix}/persona`, personaRouter);
 app.use(`${config.apiV1Prefix}/analytics`, analyticsRouter);
 

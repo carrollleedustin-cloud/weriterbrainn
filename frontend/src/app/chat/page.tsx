@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { chat, chatJson, recordAnalytics } from "@/lib/api";
+import { chat, chatJson, recordAnalytics, type Citation } from "@/lib/api";
+import { useChatShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = { role: "user" | "assistant"; content: string; citations?: Citation[] };
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,6 +22,12 @@ export default function ChatPage() {
   const scrollToEnd = useCallback(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  useChatShortcuts({
+    onSend: () => sendMessage(true),
+    onClear: () => setInput(""),
+    disabled: loading,
+  });
 
   useEffect(() => {
     scrollToEnd();
@@ -43,6 +50,13 @@ export default function ChatPage() {
           if (!res.ok) throw new Error(await res.text());
           const newConvId = res.headers.get("X-Conversation-Id");
           if (newConvId) setConversationId(newConvId);
+          let streamCitations: Citation[] = [];
+          try {
+            const cit = res.headers.get("X-Citations");
+            if (cit) streamCitations = JSON.parse(cit) as Citation[];
+          } catch {
+            /* ignore */
+          }
 
           const reader = res.body?.getReader();
           if (!reader) throw new Error("No stream");
@@ -56,12 +70,12 @@ export default function ChatPage() {
             full += chunk;
             setStreamingContent(full);
           }
-          setMessages((m) => [...m, { role: "assistant", content: full }]);
+          setMessages((m) => [...m, { role: "assistant", content: full, citations: streamCitations }]);
           setStreamingContent("");
         } else {
           const data = await chatJson(text, conversationId ?? undefined);
           setConversationId(data.conversation_id);
-          setMessages((m) => [...m, { role: "assistant", content: data.response }]);
+          setMessages((m) => [...m, { role: "assistant", content: data.response, citations: data.citations }]);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Request failed");
@@ -86,7 +100,7 @@ export default function ChatPage() {
     setError(null);
     try {
       const data = await chatJson(lastUser.content, conversationId ?? undefined);
-      setMessages((m) => [...m, { role: "assistant", content: data.response }]);
+      setMessages((m) => [...m, { role: "assistant", content: data.response, citations: data.citations }]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Regeneration failed");
     } finally {
@@ -130,6 +144,7 @@ export default function ChatPage() {
             index={i}
             isLast={i === messages.length - 1}
             isStreaming={false}
+            citations={msg.citations}
             onRegenerate={handleRegenerate}
             onAccept={handleAccept}
           />

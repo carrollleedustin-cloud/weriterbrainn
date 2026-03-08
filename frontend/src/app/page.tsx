@@ -37,7 +37,10 @@ export default function Home() {
 
       <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {[
+          { href: "/pulse", title: "Pulse", desc: "Story overview — active threads, momentum, opportunities." },
+          { href: "/universe", title: "Story Universe", desc: "Narrative intelligence — extract, compile, timeline, Q&A." },
           { href: "/chat", title: "AI Chat", desc: "Streaming dialogue with contextual memory and citations." },
+          { href: "/cast", title: "Cast", desc: "Character intelligence — goals, fears, relationships." },
           { href: "/memories", title: "Memory Explorer", desc: "Semantic search, timelines, and memory tiers." },
           { href: "/graph", title: "Knowledge Graph", desc: "Relational view of concepts, people, and beliefs." },
           { href: "/writing", title: "Writing Studio", desc: "Rewrite, expand, and mimic your cognitive style." },

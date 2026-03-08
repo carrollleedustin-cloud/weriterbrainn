@@ -52,7 +52,7 @@ export const up = (pgm) => {
       memory_id uuid NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
       chunk_index integer NOT NULL,
       chunk_text text NOT NULL,
-      embedding vector(3072) NOT NULL
+      embedding vector(1536) NOT NULL
     )
   `);
   pgm.createIndex("memory_embeddings", "memory_id");

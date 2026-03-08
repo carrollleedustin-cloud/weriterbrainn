@@ -1,10 +1,17 @@
 import OpenAI from "openai";
 import { config } from "../../config.js";
 import { RagService } from "./RagService.js";
+import {
+  sanitizeUserInput,
+  wrapUserContent,
+  detectInjection,
+} from "../lib/promptInjectionGuard.js";
+import { logger } from "../lib/logger.js";
 
 const SYSTEM_PROMPT = `You are a personal AI brain—a thinking partner that remembers and learns from the user.
 Use the provided context (memories, knowledge graph, conversation history) to give relevant, personalized responses.
-Be concise but thoughtful. Match the user's communication style when evident from context or persona metrics.`;
+Be concise but thoughtful. Adapt your tone and style to match the user's preferences.
+When you use information from the relevant memories, cite the source with [1], [2], etc. matching the numbered list in context.`;
 
 let client = null;
 
@@ -13,31 +20,34 @@ function getClient() {
   return client;
 }
 
-function personaPrompt(metrics) {
-  const hints = [];
-  if (metrics.avg_sentence_length != null)
-    hints.push(`User tends to use ~${Math.round(metrics.avg_sentence_length)} words per sentence.`);
-  if (metrics.vocab_complexity != null)
-    hints.push(`Vocabulary diversity: ${metrics.vocab_complexity.toFixed(2)}.`);
-  return hints.length ? "\nPersona: " + hints.join(" ") : "";
-}
+import { buildPersonaPrompt } from "../lib/personaPrompt.js";
 
 export class ChatService {
-  constructor({ ragService }) {
+  constructor({ ragService, personaService }) {
     this.ragService = ragService;
+    this.personaService = personaService;
   }
 
   async chatWithContext(message, userId, conversationId) {
     if (!config.openaiApiKey) {
-      return "OpenAI API key is not configured. Please set OPENAI_API_KEY.";
+      return { response: "OpenAI API key is not configured. Please set OPENAI_API_KEY.", citations: [] };
     }
-    const { contextStr, persona } = await this.ragService.buildContext({
-      message,
-      userId,
-      conversationId,
-    });
-    const systemContent = SYSTEM_PROMPT + personaPrompt(persona);
-    const userContent = `Context:\n${contextStr}\n\nUser message: ${message}`;
+    const sanitized = sanitizeUserInput(message);
+    const { detected } = detectInjection(message);
+    if (detected) {
+      logger.info("Prompt injection detected", { userId });
+    }
+    const [{ contextStr, citations }, cognitiveProfile] = await Promise.all([
+      this.ragService.buildContext({
+        message: sanitized,
+        userId,
+        conversationId,
+      }),
+      this.personaService?.getCognitiveProfile(userId) ?? Promise.resolve(null),
+    ]);
+    const personaHints = buildPersonaPrompt(cognitiveProfile);
+    const systemContent = SYSTEM_PROMPT + personaHints;
+    const userContent = `Context:\n${contextStr}\n\n${wrapUserContent(sanitized)}`;
 
     const resp = await getClient().chat.completions.create({
       model: config.openaiModel,
@@ -47,21 +57,30 @@ export class ChatService {
       ],
       temperature: 0.7,
     });
-    return (resp.choices[0]?.message?.content || "").trim();
+    const response = (resp.choices[0]?.message?.content || "").trim();
+    return { response, citations: citations || [] };
   }
 
-  async *chatStream(message, userId, conversationId) {
+  async chatStream(message, userId, conversationId) {
     if (!config.openaiApiKey) {
-      yield "OpenAI API key is not configured.";
-      return;
+      return { citations: [], async *stream() { yield "OpenAI API key is not configured."; } };
     }
-    const { contextStr, persona } = await this.ragService.buildContext({
-      message,
-      userId,
-      conversationId,
-    });
-    const systemContent = SYSTEM_PROMPT + personaPrompt(persona);
-    const userContent = `Context:\n${contextStr}\n\nUser message: ${message}`;
+    const sanitized = sanitizeUserInput(message);
+    const { detected } = detectInjection(message);
+    if (detected) {
+      logger.info("Prompt injection detected", { userId });
+    }
+    const [{ contextStr, citations }, cognitiveProfile] = await Promise.all([
+      this.ragService.buildContext({
+        message: sanitized,
+        userId,
+        conversationId,
+      }),
+      this.personaService?.getCognitiveProfile(userId) ?? Promise.resolve(null),
+    ]);
+    const personaHints = buildPersonaPrompt(cognitiveProfile);
+    const systemContent = SYSTEM_PROMPT + personaHints;
+    const userContent = `Context:\n${contextStr}\n\n${wrapUserContent(sanitized)}`;
 
     const stream = await getClient().chat.completions.create({
       model: config.openaiModel,
@@ -73,9 +92,14 @@ export class ChatService {
       stream: true,
     });
 
-    for await (const chunk of stream) {
-      const delta = chunk.choices?.[0]?.delta?.content;
-      if (delta) yield delta;
-    }
+    return {
+      citations: citations || [],
+      async *stream() {
+        for await (const chunk of stream) {
+          const delta = chunk.choices?.[0]?.delta?.content;
+          if (delta) yield delta;
+        }
+      },
+    };
   }
 }

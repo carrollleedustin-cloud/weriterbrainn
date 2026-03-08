@@ -1,29 +1,22 @@
 import { Router } from "express";
 import { container } from "../../container.js";
-import { MEMORY_TYPES } from "../../domain/index.js";
+import { validate } from "../../middleware/validate.js";
+import {
+  createMemorySchema,
+  searchMemoriesSchema,
+  consolidateMemoriesSchema,
+} from "../../lib/validate.js";
+import { runConsolidation } from "../../workers/ConsolidationWorker.js";
 
 const router = Router();
-const VALID_TYPES = MEMORY_TYPES;
 
-router.post("/", async (req, res) => {
+router.post("/", validate(createMemorySchema), async (req, res) => {
   try {
-    const { content, memory_type = "note", title } = req.body || {};
-    if (!content || typeof content !== "string") {
-      return res.status(422).json({ detail: "content required" });
-    }
-    if (content.length > 100000) {
-      return res.status(422).json({ detail: "content too long" });
-    }
-    const mt = String(memory_type || "note").toLowerCase();
-    if (!VALID_TYPES.includes(mt)) {
-      return res.status(400).json({
-        detail: `Invalid memory_type. Must be one of: ${VALID_TYPES.join(", ")}`,
-      });
-    }
+    const { content, memory_type, title } = req.validated;
     const memory = await container.memoryService.storeMemory(
       content,
-      mt,
-      title || null,
+      memory_type,
+      title ?? null,
       req.userId
     );
     res.json({
@@ -39,12 +32,14 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/search", async (req, res) => {
+router.get("/search", validate(searchMemoriesSchema, "query"), async (req, res) => {
   try {
-    const q = String(req.query.q || "").trim();
-    const limit = Math.min(parseInt(req.query.limit || "10", 10) || 10, 50);
-    if (!q) return res.json([]);
-    const results = await container.memoryService.searchMemories(q, limit, req.userId);
+    const { q, limit, memory_type, tier } = req.validated;
+    if (!q?.trim()) return res.json([]);
+    const filters = {};
+    if (memory_type) filters.memory_type = memory_type;
+    if (tier) filters.tier = tier;
+    const results = await container.memoryService.searchMemories(q, limit, req.userId, filters);
     const formatted = results.map((row) => ({
       memory: {
         id: row.id,
@@ -57,6 +52,23 @@ router.get("/search", async (req, res) => {
       score: parseFloat(row.score),
     }));
     res.json(formatted);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.post("/consolidate", validate(consolidateMemoriesSchema), async (req, res) => {
+  try {
+    if (!req.userId) {
+      return res.status(401).json({ detail: "Authentication required" });
+    }
+    const { older_than_days, batch_limit } = req.validated;
+    const result = await runConsolidation(req.userId, {
+      olderThanDays: older_than_days,
+      batchLimit: batch_limit,
+    });
+    res.json({ ok: true, ...result });
   } catch (err) {
     console.error(err);
     res.status(500).json({ detail: "Internal server error" });

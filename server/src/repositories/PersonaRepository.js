@@ -34,4 +34,24 @@ export class PersonaRepository {
       );
     }
   }
+
+  async getCognitiveProfile(userId) {
+    const r = await query(
+      `SELECT profile, updated_at FROM user_cognitive_profiles
+       WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    );
+    return r.rows[0] || null;
+  }
+
+  async upsertCognitiveProfile(userId, profile) {
+    await query(
+      `INSERT INTO user_cognitive_profiles (user_id, profile, created_at, updated_at)
+       VALUES ($1, $2::jsonb, NOW(), NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         profile = $2::jsonb,
+         updated_at = NOW()`,
+      [userId, JSON.stringify(profile)]
+    );
+  }
 }

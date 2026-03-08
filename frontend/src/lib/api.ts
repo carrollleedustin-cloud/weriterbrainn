@@ -28,10 +28,12 @@ export async function chat(
   return res;
 }
 
+export type Citation = { index: number; memory_id: string; chunk_text: string };
+
 export async function chatJson(
   message: string,
   conversationId?: string
-): Promise<{ response: string; conversation_id: string }> {
+): Promise<{ response: string; conversation_id: string; citations: Citation[] }> {
   const res = await chat(message, conversationId, false);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
@@ -50,11 +52,31 @@ export async function recordAnalytics(
   return res.json();
 }
 
-export async function searchMemories(q: string, limit = 10) {
+export async function searchMemories(
+  q: string,
+  limit = 10,
+  filters?: { memory_type?: string; tier?: string }
+) {
+  const params = new URLSearchParams({ q, limit: String(limit) });
+  if (filters?.memory_type) params.set("memory_type", filters.memory_type);
+  if (filters?.tier) params.set("tier", filters.tier);
   const res = await fetch(
-    `${API_BASE}/api/v1/memories/search?q=${encodeURIComponent(q)}&limit=${limit}`,
+    `${API_BASE}/api/v1/memories/search?${params}`,
     { headers: apiHeaders() }
   );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function consolidateMemories(options?: {
+  older_than_days?: number;
+  batch_limit?: number;
+}) {
+  const res = await fetch(`${API_BASE}/api/v1/memories/consolidate`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify(options ?? {}),
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -65,6 +87,15 @@ export async function createMemory(content: string, type = "note", title?: strin
     headers: apiHeaders(),
     body: JSON.stringify({ content, memory_type: type, title }),
   });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function searchGraphEntities(q: string, limit = 10) {
+  const res = await fetch(
+    `${API_BASE}/api/v1/graph/search?q=${encodeURIComponent(q)}&limit=${limit}`,
+    { headers: apiHeaders() }
+  );
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -85,6 +116,111 @@ export async function getGraphEdges() {
   return res.json();
 }
 
+export async function narrativeExtract(text: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/extract`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativeProject() {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/project`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativeObjects(type?: string) {
+  const params = type ? `?type=${encodeURIComponent(type)}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/narrative/objects${params}`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativeEdges() {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/edges`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function narrativeCompile(text: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/compile`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativeTimeline() {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/timeline`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativePlotThreads() {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/plot-threads`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativeStrategy(focus?: string) {
+  const params = focus ? `?focus=${encodeURIComponent(focus)}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/narrative/strategy${params}`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function narrativeAsk(q: string) {
+  const res = await fetch(
+    `${API_BASE}/api/v1/narrative/ask?q=${encodeURIComponent(q)}`,
+    { headers: apiHeaders() }
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getNarrativeCharacters() {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/characters`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getCharacterDetails(objectId: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/characters/${objectId}`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function narrativePreview(text: string, context?: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/preview`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ text, context }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function extractFromText(text: string) {
   const res = await fetch(`${API_BASE}/api/v1/graph/extract`, {
     method: "POST",
@@ -99,6 +235,17 @@ export async function getPersonaMetrics() {
   const res = await fetch(`${API_BASE}/api/v1/persona/`, {
     headers: apiHeaders(),
   });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export type EventCount = { date: string; event_type: string; count: string };
+
+export async function getAnalyticsInsights(days = 14): Promise<{ event_counts: EventCount[] }> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/analytics/insights?days=${days}`,
+    { headers: apiHeaders() }
+  );
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

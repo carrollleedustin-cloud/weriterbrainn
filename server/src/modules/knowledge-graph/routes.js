@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { container } from "../../container.js";
+import { validate } from "../../middleware/validate.js";
+import { extractSchema, graphSearchSchema } from "../../lib/validate.js";
 
 const router = Router();
 
@@ -12,6 +14,7 @@ router.get("/nodes", async (req, res) => {
         name: n.name,
         node_type: n.node_type,
         description: n.description,
+        metadata: n.metadata || null,
       }))
     );
   } catch (err) {
@@ -37,12 +40,32 @@ router.get("/edges", async (req, res) => {
   }
 });
 
-router.post("/extract", async (req, res) => {
+router.get("/search", validate(graphSearchSchema, "query"), async (req, res) => {
   try {
-    const text = String(req.body?.text || "").trim();
-    if (!text) {
-      return res.json({ entities: 0, relationships: 0 });
+    if (!req.userId) {
+      return res.status(401).json({ detail: "Authentication required" });
     }
+    const { q, limit } = req.validated;
+    const rows = await container.ragService.searchEntities(q, req.userId, limit);
+    res.json(
+      rows.map((n) => ({
+        id: n.id,
+        name: n.name,
+        node_type: n.node_type,
+        description: n.description,
+        metadata: n.metadata || null,
+        score: n.score != null ? parseFloat(n.score) : null,
+      }))
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.post("/extract", validate(extractSchema), async (req, res) => {
+  try {
+    const { text } = req.validated;
     const { entities, relationships } = await container.extractionService.extractEntitiesAndRelations(
       text
     );

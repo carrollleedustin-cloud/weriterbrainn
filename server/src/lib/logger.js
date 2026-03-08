@@ -1,24 +1,49 @@
 /**
- * Structured logger. Ready for upgrade to pino/winston.
+ * Structured logging with Pino.
+ * API: logger.info(msg, meta), logger.error(msg, err, meta), logger.debug(msg, meta)
  */
-const isDebug = process.env.DEBUG === "true";
+import pino from "pino";
+import { config } from "../../config.js";
+
+const isDev = config.env === "development";
+const basePino = pino({
+  level: config.debug ? "debug" : "info",
+  ...(isDev && {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        translateTime: "SYS:standard",
+      },
+    },
+  }),
+  base: {
+    service: config.projectName,
+    env: config.env,
+  },
+});
 
 export const logger = {
   info(msg, meta = {}) {
-    console.log(JSON.stringify({ level: "info", msg, ...meta }));
+    basePino.info(typeof meta === "object" && meta !== null ? meta : {}, msg);
   },
   error(msg, err, meta = {}) {
-    console.error(JSON.stringify({
-      level: "error",
-      msg,
-      error: err?.message || String(err),
-      stack: err?.stack,
-      ...meta,
-    }));
+    basePino.error(
+      {
+        ...(typeof meta === "object" && meta !== null ? meta : {}),
+        error: err?.message ?? String(err),
+        stack: err?.stack,
+      },
+      msg
+    );
+  },
+  warn(msg, meta = {}) {
+    basePino.warn(typeof meta === "object" && meta !== null ? meta : {}, msg);
   },
   debug(msg, meta = {}) {
-    if (isDebug) {
-      console.log(JSON.stringify({ level: "debug", msg, ...meta }));
-    }
+    basePino.debug(typeof meta === "object" && meta !== null ? meta : {}, msg);
+  },
+  child(bindings) {
+    return basePino.child(bindings);
   },
 };

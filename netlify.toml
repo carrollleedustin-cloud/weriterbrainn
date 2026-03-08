@@ -14,8 +14,11 @@
     "pg",
     "pg-protocol",
     "pg-cloudflare",
+    "pgvector",
     "abort-controller",
-    "web-streams-polyfill"
+    "web-streams-polyfill",
+    "ioredis",
+    "bullmq"
   ]
 
 [[redirects]]

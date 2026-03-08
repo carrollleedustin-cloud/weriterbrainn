@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import NavAuth from "@/components/NavAuth";
+import { ShortcutsProvider } from "@/components/ShortcutsProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,10 +22,13 @@ export const metadata: Metadata = {
 
 const navLinks = [
   { href: "/", label: "Home" },
+  { href: "/pulse", label: "Pulse" },
   { href: "/chat", label: "AI Chat" },
-  { href: "/memories", label: "Memory Explorer" },
+  { href: "/universe", label: "Story Universe" },
+  { href: "/cast", label: "Cast" },
+  { href: "/memories", label: "Memories" },
   { href: "/graph", label: "Knowledge Graph" },
-  { href: "/writing", label: "Writing Assistant" },
+  { href: "/writing", label: "Writing" },
   { href: "/analytics", label: "Analytics" },
 ];
 
@@ -59,12 +63,14 @@ export default function RootLayout({
                   </Link>
                 </li>
               ))}
-              <li className="ml-auto">
+              <li className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-[var(--fg-muted)] hidden sm:inline">? shortcuts</span>
                 <NavAuth />
               </li>
             </ul>
           </nav>
         </header>
+        <ShortcutsProvider>
         <main className="mx-auto max-w-6xl px-4 py-8">
           <div className="relative">
             <div className="pointer-events-none absolute -top-20 right-6 h-32 w-32 rounded-full bg-[rgba(139,92,246,0.25)] blur-3xl animate-float-glow" />
@@ -76,6 +82,7 @@ export default function RootLayout({
             </div>
           </div>
         </main>
+        </ShortcutsProvider>
       </body>
     </html>
   );

@@ -133,7 +133,16 @@ DATABASE_URL=postgresql://postgres.[PROJECT_REF]:[PASSWORD]@db.[PROJECT_REF].sup
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxx
 JWT_SECRET=your-32-plus-char-random-string
 
-# Optional
+# Optional - Redis (Phase 6: cache, rate limit, job queue)
+REDIS_URL=redis://localhost:6379
+USE_EMBEDDING_QUEUE=false
+
+# Optional - RAG (Phase 3)
+QUERY_REWRITE=true
+RERANK=true
+MAX_CONTEXT_TOKENS=3500
+
+# Optional - General
 CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 JWT_EXPIRE_MINUTES=10080
 OPENAI_MODEL=gpt-4.1-mini
@@ -237,6 +246,18 @@ Netlify Functions use the `zisi` bundler with externalized native/binary depende
 **Docs:**
 - [Netlify build config](https://docs.netlify.com/configure-builds/file-based-configuration/)
 - [Netlify Functions bundling](https://docs.netlify.com/functions/build-with-javascript/)
+
+## 6b. Background Worker (optional)
+
+With `REDIS_URL` set, run the worker for async embedding and consolidation jobs:
+
+```bash
+npm run worker
+```
+
+Runs in a separate process. For production, deploy the worker as a separate service (e.g. Railway, Render).
+
+---
 
 ## 7. Run Migrations
 
