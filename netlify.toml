@@ -8,6 +8,15 @@
 
 [functions]
   directory = "netlify/functions"
+  node_bundler = "zisi"
+  external_node_modules = [
+    "bcryptjs",
+    "pg",
+    "pg-protocol",
+    "pg-cloudflare",
+    "abort-controller",
+    "web-streams-polyfill"
+  ]
 
 [[redirects]]
   from = "/api/*"
