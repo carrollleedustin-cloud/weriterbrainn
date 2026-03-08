@@ -6,13 +6,15 @@ Complete setup for Supabase, API keys, and local/production deployment.
 
 ## Table of Contents
 
+0. [Prerequisites](#0-prerequisites)
 1. [Supabase Setup](#1-supabase-setup)
 2. [OpenAI API Key](#2-openai-api-key)
 3. [JWT Secret](#3-jwt-secret)
 4. [Local Environment](#4-local-environment)
 5. [Netlify Environment Variables](#5-netlify-environment-variables)
-6. [Run Migrations](#6-run-migrations)
-7. [Verification Checklist](#7-verification-checklist)
+6. [Netlify Build & Functions Configuration](#6-netlify-build--functions-configuration)
+7. [Run Migrations](#7-run-migrations)
+8. [Verification Checklist](#8-verification-checklist)
 
 ---
 
@@ -157,6 +159,11 @@ Use this when the API runs on port 8000. Leave unset when using Netlify (same-or
 ### Run Locally
 
 ```bash
+# Install dependencies (root + frontend + backend)
+npm install
+cd frontend && npm install
+cd ..\backend && npm install
+
 # Terminal 1: API
 npm run dev:api
 
@@ -187,7 +194,51 @@ cd frontend && npm run dev
 
 ---
 
-## 6. Run Migrations
+## 6. Netlify Build & Functions Configuration
+
+These settings live in the project root **[`netlify.toml`](netlify.toml:1)** and control Netlify’s build and serverless functions behavior. Keep this file committed to the repo.
+
+### Build Command (in `netlify.toml`)
+
+Netlify builds the frontend and bundles serverless functions:
+
+```toml
+[build]
+  publish = "frontend/out"
+  command = "npm install && cd frontend && npm install && npm run build"
+```
+
+### Runtime Versions (in `netlify.toml`)
+
+```toml
+[build.environment]
+  NODE_VERSION = "22"
+  PYTHON_VERSION = "3.12"
+```
+
+### Functions Bundling (in `netlify.toml`)
+
+Netlify Functions use the `zisi` bundler with externalized native/binary dependencies:
+
+```toml
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "zisi"
+  external_node_modules = [
+    "bcryptjs",
+    "pg",
+    "pg-protocol",
+    "pg-cloudflare",
+    "abort-controller",
+    "web-streams-polyfill"
+  ]
+```
+
+**Docs:**
+- [Netlify build config](https://docs.netlify.com/configure-builds/file-based-configuration/)
+- [Netlify Functions bundling](https://docs.netlify.com/functions/build-with-javascript/)
+
+## 7. Run Migrations
 
 After `DATABASE_URL` is set:
 
@@ -213,7 +264,7 @@ No extra configuration needed—RLS is wired in the server.
 
 ---
 
-## 7. Verification Checklist
+## 8. Verification Checklist
 
 - [ ] Supabase project created
 - [ ] Database password saved
@@ -239,3 +290,5 @@ No extra configuration needed—RLS is wired in the server.
 | OpenAI API Keys | https://platform.openai.com/api-keys |
 | OpenAI: Create API key | https://help.openai.com/en/articles/4936850-how-to-create-and-use-an-api-key |
 | Netlify Environment Variables | https://docs.netlify.com/build/environment-variables/overview/ |
+| Netlify Build Config | https://docs.netlify.com/configure-builds/file-based-configuration/ |
+| Netlify Functions Bundling | https://docs.netlify.com/functions/build-with-javascript/ |

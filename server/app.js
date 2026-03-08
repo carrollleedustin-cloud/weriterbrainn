@@ -4,6 +4,7 @@ import { config } from "./config.js";
 import { authMiddleware } from "./auth.js";
 import { runWithContext } from "./src/lib/requestContext.js";
 import { rateLimitMiddleware } from "./src/lib/rateLimit.js";
+import sql from "../db.js";
 
 import healthRouter from "./routes/health.js";
 import authRouter from "./src/modules/auth/routes.js";
@@ -14,6 +15,7 @@ import personaRouter from "./src/modules/persona/routes.js";
 import analyticsRouter from "./src/modules/analytics/routes.js";
 
 const app = express();
+app.locals.sql = sql;
 
 app.use(express.json({ limit: "1mb" }));
 const corsOrigins = config.corsOrigins === "*" ? "*" : config.corsOrigins.split(",").map((o) => o.trim());
