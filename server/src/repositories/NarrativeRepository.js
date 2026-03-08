@@ -136,6 +136,14 @@ export class NarrativeRepository {
     return r.rows[0] || null;
   }
 
+  async updateObjectMetadata(objectId, metadataPatch) {
+    const r = await query(
+      `UPDATE narrative_objects SET metadata = COALESCE(metadata, '{}') || $2::jsonb, updated_at = NOW() WHERE id = $1 RETURNING *`,
+      [objectId, JSON.stringify(metadataPatch)]
+    );
+    return r.rows[0] || null;
+  }
+
   async findEdgesForObject(projectId, objectId) {
     const r = await query(
       `SELECT e.*, src.name AS source_name, tgt.name AS target_name

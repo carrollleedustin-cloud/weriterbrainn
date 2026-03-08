@@ -26,6 +26,7 @@ const navLinks = [
   { href: "/chat", label: "AI Chat" },
   { href: "/universe", label: "Story Universe" },
   { href: "/cast", label: "Cast" },
+  { href: "/signal", label: "Signal" },
   { href: "/memories", label: "Memories" },
   { href: "/graph", label: "Knowledge Graph" },
   { href: "/writing", label: "Writing" },

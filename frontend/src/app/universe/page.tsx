@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   narrativeExtract,
@@ -12,6 +13,7 @@ import {
   getNarrativeTimeline,
   getNarrativePlotThreads,
   getNarrativeStrategy,
+  getCanonFacts,
   getMe,
 } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +21,7 @@ import { Textarea } from "@/components/ui/Input";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
-type Tab = "universe" | "compile" | "timeline" | "threads" | "strategy" | "qa";
+type Tab = "universe" | "compile" | "timeline" | "threads" | "strategy" | "canon" | "qa";
 type NarrativeObject = {
   id: string;
   object_type: string;
@@ -36,16 +38,25 @@ type NarrativeEdge = {
   edge_type: string;
 };
 
+type CompileIssue = {
+  issue_id?: string;
+  category?: string;
+  severity?: string;
+  summary: string;
+  confidence?: number;
+  affected_entities?: string[];
+  evidence?: string;
+  source_passage?: string;
+  related_canon?: string;
+  suggested_resolution?: string;
+};
+
 type CompileResult = {
-  alerts: Array<{
-    tier: string;
-    summary: string;
-    confidence?: number;
-    source_passage?: string;
-    related_canon?: string;
-    suggested_resolution?: string;
-  }>;
+  alerts?: Array<{ tier: string; summary: string; confidence?: number; source_passage?: string; related_canon?: string; suggested_resolution?: string }>;
+  issues?: CompileIssue[];
   overall_tier: string;
+  overall_severity?: string;
+  explanation_path?: { stages_run?: string[]; canon_facts_used?: unknown[]; issue_count?: number };
 };
 
 type TimelineEvent = {
@@ -74,9 +85,13 @@ type QAResult = {
   answer: string;
   citations: Array<{ type: string; name: string; excerpt: string }>;
   confidence: number;
+  reasoning_summary?: string;
+  related_entities?: Array<{ name: string; role: string }>;
+  ambiguity_notes?: string[];
+  contradictory_evidence?: string[];
 };
 
-export default function UniversePage() {
+function UniverseContent() {
   const [objects, setObjects] = useState<NarrativeObject[]>([]);
   const [edges, setEdges] = useState<NarrativeEdge[]>([]);
   const [extractText, setExtractText] = useState("");
@@ -85,20 +100,40 @@ export default function UniversePage() {
   const [compiling, setCompiling] = useState(false);
   const [compileResult, setCompileResult] = useState<CompileResult | null>(null);
   const [previewResult, setPreviewResult] = useState<{
-    impacts: Array<{ type: string; target: string; description: string; severity: string }>;
+    impacts?: Array<{ type: string; target: string; description: string; severity: string }>;
+    impacted_canon_facts?: Array<{ fact_value: string; impact: string }>;
+    impacted_threads?: Array<{ name: string; impact: string }>;
+    impacted_characters?: Array<{ name: string; impact: string }>;
+    blast_radius?: { scene?: number; chapter?: number; book?: number; universe?: number };
+    risk_score?: number;
+    opportunity_score?: number;
     summary: string;
+    delta_summary?: string;
+    compile_alerts?: unknown[];
   } | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [plotThreads, setPlotThreads] = useState<PlotThread[]>([]);
   const [strategy, setStrategy] = useState<StrategyResult | null>(null);
+  const [canonFacts, setCanonFacts] = useState<Array<{ id: string; fact_value: string; fact_type: string; confidence: number; canon_state: string; source_passage?: string }>>([]);
   const [qaQuestion, setQaQuestion] = useState("");
   const [qaResult, setQaResult] = useState<QAResult | null>(null);
   const [qaLoading, setQaLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
-  const [tab, setTab] = useState<Tab>("universe");
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const validTabs: Tab[] = ["universe", "compile", "timeline", "threads", "strategy", "canon", "qa"];
+  const [tab, setTab] = useState<Tab>(
+    tabFromUrl && validTabs.includes(tabFromUrl as Tab) ? (tabFromUrl as Tab) : "universe"
+  );
+
+  useEffect(() => {
+    if (tabFromUrl && validTabs.includes(tabFromUrl as Tab)) {
+      setTab(tabFromUrl as Tab);
+    }
+  }, [tabFromUrl]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -147,6 +182,12 @@ export default function UniversePage() {
     }
   }, [tab, authRequired, objects.length]);
 
+  useEffect(() => {
+    if (tab === "canon" && !authRequired) {
+      getCanonFacts().then((r) => setCanonFacts(r.facts || [])).catch(() => setCanonFacts([]));
+    }
+  }, [tab, authRequired]);
+
   const handleExtract = async () => {
     if (!extractText.trim()) return;
     setExtracting(true);
@@ -174,8 +215,12 @@ export default function UniversePage() {
     try {
       const result = await narrativePreview(compileText.trim());
       setPreviewResult(result);
-      if (result.compile_alerts?.length && !compileResult) {
-        setCompileResult({ alerts: result.compile_alerts, overall_tier: "ok" });
+      if ((result.compile_alerts?.length || result.compile_issues?.length) && !compileResult) {
+        setCompileResult({
+          alerts: result.compile_alerts,
+          issues: result.compile_issues,
+          overall_tier: "ok",
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Preview failed");
@@ -274,7 +319,7 @@ export default function UniversePage() {
       </div>
 
       <nav className="flex flex-wrap gap-2 border-b border-[rgba(139,92,246,0.2)] pb-2">
-        {(["universe", "compile", "timeline", "threads", "strategy", "qa"] as const).map((t) => (
+        {(["universe", "compile", "timeline", "threads", "strategy", "canon", "qa"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -284,7 +329,7 @@ export default function UniversePage() {
                 : "text-[var(--fg-muted)] hover:bg-[rgba(139,92,246,0.1)]"
             }`}
           >
-            {t === "qa" ? "Story Q&A" : t}
+            {t === "qa" ? "Story Q&A" : t === "canon" ? "Canon" : t}
           </button>
         ))}
       </nav>
@@ -355,33 +400,83 @@ export default function UniversePage() {
           </div>
         </div>
         {compileResult && (
-          <div className="space-y-2">
-            <p className={`text-sm font-medium ${
-              compileResult.overall_tier === "canon_break" ? "text-red-400" :
-              compileResult.overall_tier === "likely_contradiction" ? "text-amber-400" :
-              compileResult.overall_tier === "soft_risk" ? "text-yellow-400" : "text-emerald-400"
-            }`}>
-              Overall: {compileResult.overall_tier}
-            </p>
-            {compileResult.alerts.length > 0 ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className={`text-sm font-medium ${
+                compileResult.overall_tier === "canon_break" ? "text-red-400" :
+                compileResult.overall_tier === "likely_contradiction" ? "text-amber-400" :
+                compileResult.overall_tier === "soft_risk" ? "text-yellow-400" : "text-emerald-400"
+              }`}>
+                Overall: {compileResult.overall_severity ?? compileResult.overall_tier}
+              </p>
+              {compileResult.explanation_path?.issue_count !== undefined && (
+                <span className="text-xs text-[var(--fg-muted)]">
+                  {compileResult.explanation_path.issue_count} issue(s) · stages: {compileResult.explanation_path.stages_run?.join(" → ")}
+                </span>
+              )}
+            </div>
+            {((compileResult.issues && compileResult.issues.length > 0) || (compileResult.alerts && compileResult.alerts.length > 0)) ? (
               <ul className="space-y-2">
-                {compileResult.alerts.map((a, i) => (
-                  <li key={i} className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3 text-sm">
-                    <span className={`font-medium ${a.tier === "canon_break" ? "text-red-400" : "text-[var(--fg-secondary)]"}`}>{a.tier}</span>
-                    <p className="text-[var(--fg-primary)] mt-1">{a.summary}</p>
-                    {a.related_canon && <p className="text-[var(--fg-muted)] mt-1">Canon: {a.related_canon}</p>}
-                    {a.suggested_resolution && <p className="text-emerald-400/90 mt-1">Fix: {a.suggested_resolution}</p>}
-                  </li>
-                ))}
+                {(compileResult.issues ?? compileResult.alerts ?? []).map((item, i) => {
+                  const iss = item as CompileIssue & { tier?: string; related_canon?: string; suggested_resolution?: string };
+                  const severity = "severity" in item ? (item as { severity?: string }).severity : null;
+                  const tier = "tier" in item ? (item as { tier?: string }).tier : null;
+                  const category = "category" in item ? (item as { category?: string }).category : null;
+                  const isCritical = severity === "critical" || tier === "canon_break";
+                  const isHigh = severity === "high" || tier === "likely_contradiction";
+                  return (
+                    <li key={i} className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-medium ${isCritical ? "text-red-400" : isHigh ? "text-amber-400" : "text-[var(--fg-secondary)]"}`}>
+                          {category ?? tier ?? "issue"}
+                        </span>
+                        {severity && (
+                          <span className="rounded bg-[rgba(139,92,246,0.15)] px-1.5 py-0.5 text-xs">{severity}</span>
+                        )}
+                      </div>
+                      <p className="text-[var(--fg-primary)] mt-1">{iss.summary}</p>
+                      {iss.related_canon && <p className="text-[var(--fg-muted)] mt-1">Canon: {iss.related_canon}</p>}
+                      {iss.suggested_resolution && <p className="text-emerald-400/90 mt-1">Fix: {iss.suggested_resolution}</p>}
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="text-[var(--fg-muted)]">No continuity issues detected.</p>
             )}
             {previewResult && (
-              <div className="mt-4 space-y-2 border-t border-[rgba(139,92,246,0.2)] pt-4">
-                <p className="text-sm font-medium text-[var(--fg-muted)]">Consequence Preview</p>
-                <p className="text-sm text-[var(--fg-secondary)]">{previewResult.summary}</p>
-                {previewResult.impacts?.length > 0 && (
+              <div className="mt-4 space-y-4 border-t border-[rgba(139,92,246,0.2)] pt-4">
+                <div>
+                  <p className="text-sm font-medium text-[var(--fg-muted)]">Consequence Preview V2</p>
+                  <p className="text-sm text-[var(--fg-secondary)] mt-1">{previewResult.summary}</p>
+                  {previewResult.delta_summary && (
+                    <p className="text-xs text-[var(--fg-muted)] mt-1">{previewResult.delta_summary}</p>
+                  )}
+                </div>
+                {(previewResult.risk_score !== undefined || previewResult.opportunity_score !== undefined) && (
+                  <div className="flex gap-4">
+                    <div className="rounded-md bg-red-500/10 px-3 py-1.5 text-sm">
+                      Risk: {((previewResult.risk_score ?? 0) * 100).toFixed(0)}%
+                    </div>
+                    <div className="rounded-md bg-emerald-500/10 px-3 py-1.5 text-sm">
+                      Opportunity: {((previewResult.opportunity_score ?? 0) * 100).toFixed(0)}%
+                    </div>
+                    {previewResult.blast_radius && (
+                      <div className="text-xs text-[var(--fg-muted)]">
+                        Blast: scene {previewResult.blast_radius.scene ?? 0} · chapter {previewResult.blast_radius.chapter ?? 0} · universe {previewResult.blast_radius.universe ?? 0}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {previewResult.impacted_threads?.length ? (
+                  <div>
+                    <p className="text-xs font-medium text-[var(--fg-muted)] mb-1">Impacted threads</p>
+                    {previewResult.impacted_threads.map((t, i) => (
+                      <span key={i} className="mr-2 rounded bg-[rgba(139,92,246,0.15)] px-2 py-0.5 text-xs">{t.name}: {t.impact}</span>
+                    ))}
+                  </div>
+                ) : null}
+                {previewResult.impacts?.length ? (
                   <ul className="space-y-1 text-sm">
                     {previewResult.impacts.map((i, idx) => (
                       <li key={idx} className={`rounded px-2 py-1 ${
@@ -393,7 +488,7 @@ export default function UniversePage() {
                       </li>
                     ))}
                   </ul>
-                )}
+                ) : null}
               </div>
             )}
           </div>
@@ -420,7 +515,7 @@ export default function UniversePage() {
                 <div>
                   <p className="font-medium text-[var(--fg-primary)]">{ev.name}</p>
                   {ev.summary && <p className="text-sm text-[var(--fg-muted)] mt-1">{ev.summary}</p>}
-                  {ev.temporal && <p className="text-xs text-[var(--fg-muted)] mt-1">When: {String(ev.temporal)}</p>}
+                  {ev.temporal != null ? <p className="text-xs text-[var(--fg-muted)] mt-1">When: {String(ev.temporal)}</p> : null}
                   {ev.caused_by && ev.caused_by.length > 0 && (
                     <p className="text-xs text-amber-400/90 mt-1">Caused by: {ev.caused_by.map((c) => c.name).join(", ")}</p>
                   )}
@@ -499,6 +594,30 @@ export default function UniversePage() {
       </div>
       )}
 
+      {tab === "canon" && (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-[var(--fg-primary)]">Canon Ledger</h3>
+        <p className="text-sm text-[var(--fg-muted)]">Structured truth with provenance — what the system believes, confidence, and source.</p>
+        {canonFacts.length === 0 ? (
+          <p className="text-[var(--fg-muted)]">No canon facts yet. Extract text to establish facts.</p>
+        ) : (
+          <div className="space-y-2">
+            {canonFacts.map((f) => (
+              <div key={f.id} className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3">
+                <p className="text-[var(--fg-primary)]">{f.fact_value}</p>
+                <div className="mt-1 flex flex-wrap gap-2 text-xs text-[var(--fg-muted)]">
+                  <span>{f.fact_type}</span>
+                  <span>{(f.confidence * 100).toFixed(0)}%</span>
+                  <span>{f.canon_state}</span>
+                  {f.source_passage && <span className="truncate max-w-xs">Source: {f.source_passage}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      )}
+
       {tab === "qa" && (
       <div className="space-y-4">
         <h3 className="text-lg font-medium text-[var(--fg-primary)]">Story Q&A</h3>
@@ -517,17 +636,46 @@ export default function UniversePage() {
           </Button>
         </div>
         {qaResult && (
-          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4 space-y-2">
+          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4 space-y-3">
             <p className="text-[var(--fg-primary)]">{qaResult.answer}</p>
-            <p className="text-xs text-[var(--fg-muted)]">Confidence: {(qaResult.confidence * 100).toFixed(0)}%</p>
-            {qaResult.citations?.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--fg-muted)]">Confidence: {(qaResult.confidence * 100).toFixed(0)}%</span>
+              {qaResult.reasoning_summary && (
+                <span className="text-xs text-[var(--fg-muted)]">· {qaResult.reasoning_summary}</span>
+              )}
+            </div>
+            {qaResult.related_entities?.length ? (
+              <div>
+                <p className="text-xs font-medium text-[var(--fg-muted)] mb-1">Related</p>
+                {qaResult.related_entities.map((e, i) => (
+                  <span key={i} className="mr-2 rounded bg-[rgba(139,92,246,0.15)] px-2 py-0.5 text-xs">{e.name}: {e.role}</span>
+                ))}
+              </div>
+            ) : null}
+            {qaResult.ambiguity_notes?.length ? (
+              <div className="rounded bg-amber-500/10 p-2 text-amber-200 text-sm">
+                <p className="font-medium text-xs text-amber-400 mb-1">Uncertainty</p>
+                {qaResult.ambiguity_notes.map((n, i) => (
+                  <p key={i}>• {n}</p>
+                ))}
+              </div>
+            ) : null}
+            {qaResult.contradictory_evidence?.length ? (
+              <div className="rounded bg-red-500/10 p-2 text-red-200 text-sm">
+                <p className="font-medium text-xs text-red-400 mb-1">Contradictions</p>
+                {qaResult.contradictory_evidence.map((c, i) => (
+                  <p key={i}>• {c}</p>
+                ))}
+              </div>
+            ) : null}
+            {qaResult.citations?.length ? (
               <div className="pt-2 border-t border-[rgba(139,92,246,0.15)]">
                 <p className="text-xs font-medium text-[var(--fg-muted)] mb-1">Citations</p>
                 {qaResult.citations.map((c, i) => (
                   <p key={i} className="text-xs text-[var(--fg-secondary)]">• [{c.type}] {c.name}: {c.excerpt}</p>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
@@ -599,3 +747,12 @@ export default function UniversePage() {
     </div>
   );
 }
+
+export default function UniversePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-12 text-[var(--fg-muted)]">Loading...</div>}>
+      <UniverseContent />
+    </Suspense>
+  );
+}
+

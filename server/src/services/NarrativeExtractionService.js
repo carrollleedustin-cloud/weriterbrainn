@@ -40,9 +40,11 @@ function getClient() {
 const SIMILARITY_THRESHOLD = 0.82;
 
 export class NarrativeExtractionService {
-  constructor({ narrativeRepository, embeddingService }) {
+  constructor({ narrativeRepository, embeddingService, canonLedgerService = null, knowledgeStateService = null }) {
     this.narrativeRepo = narrativeRepository;
     this.embeddingService = embeddingService;
+    this.canonLedger = canonLedgerService;
+    this.knowledgeState = knowledgeStateService;
   }
 
   async extractNarrative(text) {
@@ -163,18 +165,44 @@ export class NarrativeExtractionService {
             edgeType: relType,
           });
         }
+        if (this.knowledgeState && relType === "character_knows_secret") {
+          const charId = srcObj.id;
+          const secretKey = tgtObj?.name || tgtName;
+          if (charId && secretKey) {
+            await this.knowledgeState.recordKnowledge({
+              userId,
+              characterId: charId,
+              factKey: secretKey,
+              assertionType: "knows",
+              confidence: 0.8,
+              sourcePassage: sourcePassage?.slice(0, 300) || null,
+              sourceObjectId: tgtObj?.id,
+            }).catch(() => {});
+          }
+        }
       }
     }
 
-    // Canon facts → ledger events
+    // Canon facts → Canon Ledger (structured facts) + ledger events
     for (const cf of extracted.canon_facts) {
       if (cf.fact) {
-        await this.narrativeRepo.recordCanonEvent({
-          projectId,
-          eventType: "canon_established",
-          payload: { fact: cf.fact, confidence: cf.confidence ?? 0.8 },
-          sourcePassage: sourcePassage?.slice(0, 500) || null,
-        });
+        if (this.canonLedger) {
+          await this.canonLedger.recordFact({
+            userId,
+            factType: "other",
+            factValue: cf.fact,
+            sourcePassage: sourcePassage?.slice(0, 500) || null,
+            confidence: cf.confidence ?? 0.8,
+            canonState: "draft",
+          }).catch(() => {});
+        } else {
+          await this.narrativeRepo.recordCanonEvent({
+            projectId,
+            eventType: "canon_established",
+            payload: { fact: cf.fact, confidence: cf.confidence ?? 0.8 },
+            sourcePassage: sourcePassage?.slice(0, 500) || null,
+          });
+        }
       }
     }
 

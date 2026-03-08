@@ -140,3 +140,59 @@ Execution plan derived from [ARCHITECTURE-AUDIT.md](./ARCHITECTURE-AUDIT.md).
 |------|--------|
 | Home page | ✅ Pulse, Universe, Cast cards; NIOS entry points |
 | Consequence Preview UI | ✅ Preview button in Compile tab |
+
+---
+
+## NIOS V2 — Canon Truth + Richer Intelligence
+
+### Canon Ledger ✅
+
+| Task | Status |
+|------|--------|
+| canon_facts table | ✅ fact_type, fact_value, entity_ids, provenance, confidence, supersedes |
+| CanonLedgerRepository | ✅ CRUD, findFactsByProject, findFactsForEntity |
+| CanonLedgerService | ✅ recordFact, getFacts, buildCanonContextForCompiler |
+| Extraction → Canon Ledger | ✅ canon_facts from extraction written to structured facts |
+| API | ✅ GET /canon/facts, GET /canon/facts/:id |
+| Universe Canon tab | ✅ Browse facts with provenance |
+
+### Compiler V2 ✅
+
+| Task | Status |
+|------|--------|
+| Richer output | ✅ issues (category, severity, affected_entities, evidence, suggested_resolution) |
+| Explanation path | ✅ stages_run, canon_facts_used |
+| Categories | ✅ timeline, lore, character, knowledge, relationship, setup_payoff, style |
+
+### Knowledge State ✅
+
+| Task | Status |
+|------|--------|
+| character_knowledge table | ✅ character_id, fact_key, assertion_type, confidence |
+| KnowledgeStateRepository | ✅ create, findByCharacter, findKnowers |
+| Extraction integration | ✅ character_knows_secret → knowledge assertions |
+| Character detail | ✅ knowledge state in Cast |
+
+### Character V2 ✅
+
+| Task | Status |
+|------|--------|
+| Persistent traits | ✅ goals, fears, beliefs, loyalties, desires, trust_edges, internal_conflicts |
+| Arc + OOC risk | ✅ arc_phase, arc_hint, out_of_character_risk |
+| Persistence | ✅ updateObjectMetadata on inference |
+
+### Consequence Preview V2 ✅
+
+| Task | Status |
+|------|--------|
+| Ripple model | ✅ impacted_facts, events, threads, characters, knowledge |
+| Blast radius | ✅ scene, chapter, book, universe |
+| Risk/opportunity scores | ✅ numeric scores |
+| Delta summary | ✅ before vs after |
+
+### Q&A V2 ✅
+
+| Task | Status |
+|------|--------|
+| Structured response | ✅ reasoning_summary, related_entities |
+| Uncertainty | ✅ ambiguity_notes, contradictory_evidence |

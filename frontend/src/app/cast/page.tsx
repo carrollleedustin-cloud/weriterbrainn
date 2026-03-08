@@ -12,8 +12,20 @@ export default function CastPage() {
   const [details, setDetails] = useState<{
     name?: string;
     summary?: string;
-    metadata?: { goals?: string[]; fears?: string[]; knowledge?: string[] };
+    metadata?: {
+      goals?: string[];
+      fears?: string[];
+      beliefs?: string[];
+      loyalties?: string[];
+      desires?: string[];
+      trust_edges?: Array<{ target: string; level: string }>;
+      internal_conflicts?: string[];
+      arc_phase?: string;
+      arc_hint?: string;
+      out_of_character_risk?: string;
+    };
     relationships?: Array<{ type: string; other: string }>;
+    knowledge?: Array<{ fact_key: string; assertion_type: string; confidence: number }>;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [authRequired, setAuthRequired] = useState(false);
@@ -100,6 +112,78 @@ export default function CastPage() {
                       <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
                         {(details.metadata?.fears ?? []).map((f, i) => (
                           <li key={i}>• {f}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(details.metadata?.beliefs ?? [])?.length ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Beliefs</h3>
+                      <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
+                        {(details.metadata?.beliefs ?? []).map((b, i) => (
+                          <li key={i}>• {b}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(details.metadata?.loyalties ?? [])?.length ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Loyalties</h3>
+                      <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
+                        {(details.metadata?.loyalties ?? []).map((l, i) => (
+                          <li key={i}>• {l}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(details.metadata?.desires ?? [])?.length ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Desires</h3>
+                      <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
+                        {(details.metadata?.desires ?? []).map((d, i) => (
+                          <li key={i}>• {d}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(details.metadata?.internal_conflicts ?? [])?.length ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-amber-400/90">Internal conflicts</h3>
+                      <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
+                        {(details.metadata?.internal_conflicts ?? []).map((c, i) => (
+                          <li key={i}>• {c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(details.metadata?.arc_phase || details.metadata?.arc_hint) ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Arc</h3>
+                      <p className="text-sm text-[var(--fg-secondary)]">
+                        {details.metadata?.arc_phase}
+                        {details.metadata?.arc_hint ? ` — ${details.metadata.arc_hint}` : ""}
+                      </p>
+                    </div>
+                  ) : null}
+                  {(details.metadata?.trust_edges ?? [])?.length ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Trust</h3>
+                      <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
+                        {(details.metadata?.trust_edges ?? []).map((te: { target: string; level: string }, i: number) => (
+                          <li key={i}>→ {te.target}: {te.level}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {details.metadata?.out_of_character_risk ? (
+                    <p className="text-xs text-amber-400/90">OOC risk: {details.metadata.out_of_character_risk}</p>
+                  ) : null}
+                  {details.knowledge?.length ? (
+                    <div>
+                      <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Knowledge state</h3>
+                      <ul className="mt-1 space-y-1 text-sm text-[var(--fg-secondary)]">
+                        {details.knowledge.map((k, i) => (
+                          <li key={i}>• {k.fact_key} ({k.assertion_type}, {(k.confidence * 100).toFixed(0)}%)</li>
                         ))}
                       </ul>
                     </div>

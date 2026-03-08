@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import { config } from "../../config.js";
-import { NarrativeRepository } from "../repositories/NarrativeRepository.js";
 
 let client = null;
 
@@ -10,7 +9,8 @@ function getClient() {
 }
 
 /**
- * Story Q&A: natural-language queries over the narrative universe with citations.
+ * Story Q&A V2: graph-aware, timeline-aware, knowledge-aware answers.
+ * Structured results: answer, confidence, citations, reasoning, related entities, ambiguity, contradictory evidence.
  */
 export class StoryQAService {
   constructor({ narrativeRepository, embeddingService }) {
@@ -40,6 +40,7 @@ export class StoryQAService {
       .join("\n");
     return {
       objects: objects.map((o) => ({
+        id: o.id,
         type: o.object_type,
         name: o.name,
         summary: o.summary,
@@ -51,14 +52,17 @@ export class StoryQAService {
   }
 
   async ask(question, userId) {
-    if (!question?.trim() || !config.openaiApiKey) {
-      return { answer: "Unable to answer.", citations: [], confidence: 0 };
+    if (!question?.trim()) {
+      return this.emptyAnswer();
+    }
+    if (!config.openaiApiKey) {
+      return this.emptyAnswer();
     }
 
     const project = await this.narrativeRepo.getOrCreateDefaultProject(userId);
     const context = await this.buildContext(project.id);
 
-    const prompt = `You are a Story Q&A system. Answer the question using ONLY the provided story universe data. Cite specific objects/facts.
+    const prompt = `You are Story Q&A V2. Answer using ONLY the provided story universe. Support multi-hop reasoning. Note ambiguity or contradictions if present.
 
 STORY UNIVERSE:
 Objects: ${JSON.stringify(context.objects)}
@@ -67,11 +71,15 @@ Canon facts: ${context.canon}
 
 QUESTION: ${question}
 
-Respond with JSON:
+Respond with JSON only:
 {
   "answer": "direct answer with evidence",
+  "confidence": 0.0-1.0,
   "citations": [{"type": "object|canon|edge", "name": "...", "excerpt": "relevant text"}],
-  "confidence": 0.0-1.0
+  "reasoning_summary": "brief chain of reasoning (1-2 sentences)",
+  "related_entities": [{"name": "...", "role": "why relevant"}],
+  "ambiguity_notes": ["any uncertainties or multiple interpretations"],
+  "contradictory_evidence": ["conflicting facts if any"]
 }`;
 
     try {
@@ -88,11 +96,28 @@ Respond with JSON:
       const data = JSON.parse(content);
       return {
         answer: data.answer || "No answer found.",
+        confidence: Math.min(1, Math.max(0, data.confidence ?? 0.5)),
         citations: data.citations || [],
-        confidence: data.confidence ?? 0.5,
+        reasoning_summary: data.reasoning_summary || null,
+        related_entities: data.related_entities || [],
+        ambiguity_notes: data.ambiguity_notes || [],
+        contradictory_evidence: data.contradictory_evidence || [],
       };
-    } catch {
-      return { answer: "Could not process the question.", citations: [], confidence: 0 };
+    } catch (err) {
+      console.error("StoryQAService ask error:", err);
+      return this.emptyAnswer();
     }
+  }
+
+  emptyAnswer() {
+    return {
+      answer: "Unable to answer.",
+      confidence: 0,
+      citations: [],
+      reasoning_summary: null,
+      related_entities: [],
+      ambiguity_notes: [],
+      contradictory_evidence: [],
+    };
   }
 }

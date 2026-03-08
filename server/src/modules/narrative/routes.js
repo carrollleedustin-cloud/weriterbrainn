@@ -123,6 +123,29 @@ router.get("/characters", async (req, res) => {
   }
 });
 
+router.get("/knowledge/knowers/:factKey", async (req, res) => {
+  try {
+    if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
+    const factKey = decodeURIComponent(req.params.factKey);
+    const rows = await container.knowledgeStateService.getKnowersOfFact(factKey, req.userId);
+    res.json({ knowers: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.get("/knowledge/:characterId", async (req, res) => {
+  try {
+    if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
+    const rows = await container.knowledgeStateService.getKnowledgeForCharacter(req.params.characterId, req.userId);
+    res.json({ knowledge: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
 router.get("/characters/:objectId", async (req, res) => {
   try {
     if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
@@ -153,6 +176,35 @@ router.get("/ask", validate(narrativeQuerySchema, "query"), async (req, res) => 
     if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
     const { q } = req.validated;
     const result = await container.storyQAService.ask(q, req.userId);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.get("/canon/facts", async (req, res) => {
+  try {
+    if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
+    const canonState = req.query.state || null;
+    const factType = req.query.type || null;
+    const result = await container.canonLedgerService.getFacts(req.userId, {
+      canonState,
+      factType,
+      limit: 200,
+    });
+    res.json({ facts: result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.get("/canon/facts/:factId", async (req, res) => {
+  try {
+    if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
+    const result = await container.canonLedgerService.getFactById(req.params.factId, req.userId);
+    if (!result) return res.status(404).json({ detail: "Fact not found" });
     res.json(result);
   } catch (err) {
     console.error(err);

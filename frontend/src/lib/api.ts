@@ -211,6 +211,26 @@ export async function getCharacterDetails(objectId: string) {
   return res.json();
 }
 
+export async function getCanonFacts(params?: { state?: string; type?: string }) {
+  const search = new URLSearchParams();
+  if (params?.state) search.set("state", params.state);
+  if (params?.type) search.set("type", params.type);
+  const q = search.toString();
+  const res = await fetch(`${API_BASE}/api/v1/narrative/canon/facts${q ? `?${q}` : ""}`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getCanonFact(factId: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/canon/facts/${factId}`, {
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function narrativePreview(text: string, context?: string) {
   const res = await fetch(`${API_BASE}/api/v1/narrative/preview`, {
     method: "POST",
