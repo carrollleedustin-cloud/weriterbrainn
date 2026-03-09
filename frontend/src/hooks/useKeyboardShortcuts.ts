@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type ShortcutHandler = () => void;
 
 /** Global keyboard shortcuts: Cmd/Ctrl+K focus chat, Cmd/Ctrl+1–6 nav, ? for help. */
 export function useGlobalShortcuts() {
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -123,7 +123,7 @@ export default function LoomPage() {
               <p className="text-xs font-medium text-amber-400/90 mb-2">◉ Narrative knots (threads intersecting)</p>
               <ul className="space-y-1 text-xs text-[var(--fg-muted)]">
                 {knots.map((k, i) => (
-                  <li key={i}>Event "{k.event}" links {k.threadIds.length} threads</li>
+                  <li key={i}>Event &ldquo;{k.event}&rdquo; links {k.threadIds.length} threads</li>
                 ))}
               </ul>
             </div>

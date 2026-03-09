@@ -129,7 +129,7 @@ export default function RiverPage() {
             </div>
           </div>
           <p className="text-xs text-[var(--fg-muted)]">
-            Flow: left → right. Dashed links show sequence. "← X" = caused by X.
+            Flow: left → right. Dashed links show sequence. &ldquo;← X&rdquo; = caused by X.
           </p>
         </>
       )}

@@ -48,20 +48,13 @@ function CastContent() {
     });
   }, []);
 
-  useEffect(() => {
-    const cId = searchParams.get("c");
-    if (cId && characters.length > 0) {
-      const ch = characters.find((x) => x.id === cId);
-      if (ch && selected?.id !== cId) setSelected({ id: ch.id, name: ch.name });
-    }
-  }, [searchParams, characters, selected?.id]);
+  const requestedId = searchParams.get("c");
+  const requestedCharacter = requestedId
+    ? characters.find((x) => x.id === requestedId)
+    : null;
 
   useEffect(() => {
-    if (!selected) {
-      setDetails(null);
-      return;
-    }
-    setDetails(null);
+    if (!selected?.id) return;
     getCharacterDetails(selected.id)
       .then((d) => setDetails(d))
       .catch(() => setDetails(null));
@@ -101,7 +94,10 @@ function CastContent() {
             {characters.map((c) => (
               <button
                 key={c.id}
-                onClick={() => setSelected({ id: c.id, name: c.name })}
+                onClick={() => {
+                  setSelected({ id: c.id, name: c.name });
+                  setDetails(null);
+                }}
                 className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all ${
                   selected?.id === c.id
                     ? "bg-[linear-gradient(135deg,rgba(139,92,246,0.3),rgba(139,92,246,0.15))] text-[var(--fg-primary)] shadow-[0_0_16px_rgba(139,92,246,0.2)]"
@@ -250,6 +246,12 @@ function CastContent() {
                   <Skeleton className="h-16 w-full" />
                 </div>
               )
+            ) : requestedCharacter ? (
+              <div className="space-y-3">
+                <p className="text-sm text-[var(--fg-muted)]">Loading {requestedCharacter.name}…</p>
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-64" />
+              </div>
             ) : (
               <p className="text-[var(--fg-muted)]">Select a character</p>
             )}

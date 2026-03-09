@@ -23,11 +23,6 @@ export default function Home() {
   const [objects, setObjects] = useState<Array<{ id: string; name: string; object_type: string; summary?: string }>>([]);
   const [edges, setEdges] = useState<Array<{ source_id: string; target_id: string }>>([]);
   const [threads, setThreads] = useState<PlotThread[]>([]);
-  const [strategy, setStrategy] = useState<{
-    summary?: string;
-    suggestions?: Array<{ title: string; description: string; priority?: string }>;
-    opportunities?: Array<{ title: string; description: string }>;
-  } | null>(null);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [characters, setCharacters] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -48,11 +43,10 @@ export default function Home() {
         getNarrativeStrategy().catch(() => null),
         getNarrativeTimeline().catch(() => ({ events: [] })),
         getNarrativeCharacters().catch(() => []),
-      ]).then(([objs, edgs, th, strat, tl, chars]) => {
+      ]).then(([objs, edgs, th, , tl, chars]) => {
         setObjects(objs);
         setEdges(edgs);
         setThreads(th.threads || []);
-        setStrategy(strat);
         setTimelineEvents(tl.events || []);
         setCharacters(Array.isArray(chars) ? chars : []);
       }).catch(() => {}).finally(() => setLoading(false));
@@ -79,16 +73,6 @@ export default function Home() {
     }
   };
 
-  const activeThreads = threads.filter((t) =>
-    ["active", "escalating", "converging"].includes((t.status || "").toLowerCase())
-  );
-  const insightItems = [
-    ...(strategy?.suggestions?.slice(0, 2).map((s) => ({ type: "suggestion" as const, ...s })) ?? []),
-    ...(strategy?.opportunities?.slice(0, 2).map((o) => ({ type: "opportunity" as const, ...o })) ?? []),
-  ];
-  const momentumPct = threads.length > 0
-    ? Math.round((activeThreads.length / Math.max(threads.length, 1)) * 100)
-    : 0;
 
   if (authRequired) {
     return (
@@ -143,7 +127,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[480px] flex-col gap-6">
+      <div className="flex min-h-[640px] flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-8 w-64" />
@@ -151,8 +135,8 @@ export default function Home() {
           </div>
           <Skeleton className="h-8 w-20" />
         </div>
-        <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
-          <Skeleton className="h-[400px] w-full rounded-lg" />
+        <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+          <Skeleton className="h-[520px] w-full rounded-lg" />
           <div className="space-y-4">
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-32 w-full" />
@@ -162,54 +146,64 @@ export default function Home() {
     );
   }
 
-  const hasStory = objects.length > 0 || threads.length > 0;
+  const hasStory = objects.length > 0 || threads.length > 0 || timelineEvents.length > 0 || characters.length > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--fg-primary)]">
-            Narrative Command Center
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(139,92,246,0.3)] bg-[rgba(139,92,246,0.1)] px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-[var(--fg-secondary)]">
+            Narrative Intelligence OS
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--fg-primary)] sm:text-5xl">
+            Enter the <span className="gradient-text">Story Cosmos</span>
           </h1>
-          <p className="text-sm text-[var(--fg-muted)]">
-            Your story universe — explore, command, connect.
+          <p className="max-w-2xl text-sm text-[var(--fg-muted)]">
+            Stories are living systems of gravity, memory, tension, and evolution. Navigate them through spatial exploration —
+            zoom, pan, dive, orbit.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/universe"
-            className="btn-cosmos rounded-lg px-4 py-2 text-sm text-[var(--fg-secondary)]"
+            className="btn-cosmos rounded-full px-5 py-2 text-sm text-[var(--fg-secondary)]"
           >
-            Story Universe
+            Open Story Cosmos
           </Link>
           <Link
             href="/chat"
-            className="rounded-lg bg-[linear-gradient(135deg,rgba(139,92,246,0.35),rgba(139,92,246,0.2))] px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition hover:shadow-[0_0_28px_rgba(139,92,246,0.4)]"
+            className="rounded-full bg-[linear-gradient(135deg,rgba(139,92,246,0.35),rgba(139,92,246,0.2))] px-5 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition hover:shadow-[0_0_28px_rgba(139,92,246,0.4)]"
           >
-            AI Chat
+            Invoke Oracle
           </Link>
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
-        {/* Story Galaxy — center */}
-        <div className="cosmos-panel cosmos-graph-bg relative min-h-[420px] overflow-hidden rounded-[var(--radius-lg)] glow-border" role="region" aria-label="Story Cosmos">
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_0.6fr]">
+        <div className="cosmos-panel cosmos-graph-bg relative min-h-[520px] overflow-hidden rounded-[var(--radius-lg)] glow-border" role="region" aria-label="Story Cosmos">
+          <div className="absolute inset-0">
+            <div className="cosmos-constellation" />
+            <div className="cosmos-orbit orbit-1" />
+            <div className="cosmos-orbit orbit-2" />
+            <div className="cosmos-river" />
+            <div className="cosmos-loom" />
+          </div>
           {!hasStory ? (
-            <div className="flex h-[420px] flex-col items-center justify-center gap-4 text-center">
-              <p className="text-[var(--fg-muted)]">No story data yet.</p>
+            <div className="relative z-10 flex h-[520px] flex-col items-center justify-center gap-4 text-center">
+              <p className="text-[var(--fg-muted)]">Your cosmos is dormant.</p>
               <p className="max-w-sm text-sm text-[var(--fg-muted)]">
-                Extract narrative text in Story Universe to build your galaxy.
+                Begin by extracting narrative text to seed characters, events, and constellations.
               </p>
               <Link
                 href="/universe"
-                className="rounded-md bg-[rgba(139,92,246,0.2)] px-4 py-2 text-sm text-[var(--fg-primary)] hover:bg-[rgba(139,92,246,0.3)]"
+                className="rounded-full bg-[rgba(139,92,246,0.2)] px-4 py-2 text-sm text-[var(--fg-primary)] hover:bg-[rgba(139,92,246,0.3)]"
               >
-                Go to Story Universe
+                Seed the Cosmos
               </Link>
             </div>
           ) : graphData.nodes.length === 0 ? (
-            <div className="flex h-[420px] flex-col items-center justify-center gap-2 text-[var(--fg-muted)]">
-              <p>No nodes yet — extract text to populate the graph.</p>
+            <div className="relative z-10 flex h-[520px] flex-col items-center justify-center gap-2 text-[var(--fg-muted)]">
+              <p>No celestial objects yet — extract text to populate the cosmos.</p>
               <Link href="/universe" className="text-sm text-[rgba(139,92,246,0.9)] hover:underline">Extract</Link>
             </div>
           ) : (
@@ -243,137 +237,206 @@ export default function Home() {
                   </div>
                   <div className="mt-2 flex gap-2">
                     {(selectedNode.object_type || "").toLowerCase() === "character" ? (
-                      <Link href={`/cast?c=${selectedNode.id}`} className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">Cast →</Link>
+                      <Link href={`/cast?c=${selectedNode.id}`} className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">Mindspace →</Link>
                     ) : null}
-                    <Link href="/universe" className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">Universe →</Link>
+                    <Link href="/universe" className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">Cosmos →</Link>
                   </div>
                 </div>
               )}
             </>
           )}
+          <div className="absolute left-6 top-6 z-10 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.2em] text-[rgba(255,255,255,0.6)]">
+            <span className="cosmos-chip">Zoom</span>
+            <span className="cosmos-chip">Pan</span>
+            <span className="cosmos-chip">Dive</span>
+            <span className="cosmos-chip">Orbit</span>
+          </div>
+          <div className="absolute right-6 top-6 z-10 flex flex-col gap-2">
+            <div className="cosmos-meter">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">Narrative Energy</div>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[rgba(139,92,246,0.12)]">
+                <div className="h-full w-[72%] rounded-full bg-[linear-gradient(90deg,#8b5cf6,#c084fc,#f0abfc)]" />
+              </div>
+              <div className="mt-1 flex justify-between text-[10px] text-[var(--fg-muted)]">
+                <span>Intense</span>
+                <span>72%</span>
+              </div>
+            </div>
+            <div className="cosmos-meter">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--fg-muted)]">Creative Pulse</div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+                <span className="text-xs text-[var(--fg-secondary)]">Flowing</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Sidebar: Active Threads, Momentum, Cast */}
         <div className="flex flex-col gap-4">
           <div className="cosmos-card rounded-lg p-4">
-            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Active threads</h3>
-            {threads.length === 0 ? (
-              <p className="mt-2 text-sm text-[var(--fg-muted)]">None yet</p>
-            ) : (
-              <ul className="mt-2 space-y-1.5">
-                {(activeThreads.length ? activeThreads : threads).slice(0, 5).map((t) => {
-                  const isActive = ["active", "escalating", "converging"].includes((t.status || "").toLowerCase());
-                  return (
-                    <li key={t.id} className="flex items-center gap-2 text-sm">
-                      <span className={`shrink-0 ${isActive ? "text-emerald-400" : "text-[var(--fg-muted)]"}`}>
-                        {isActive ? "▲" : "○"}
-                      </span>
-                      <span className="truncate text-[var(--fg-secondary)]">{t.name}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            <Link href="/loom" className="link-glow mt-2 block text-xs transition-all">
-              View Loom →
-            </Link>
-          </div>
-
-          <div className="cosmos-card rounded-lg p-4">
-            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Momentum</h3>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(139,92,246,0.15)]">
-                <div
-                  className="h-full rounded-full bg-[rgba(139,92,246,0.6)] transition-all"
-                  style={{ width: `${momentumPct}%` }}
-                />
-              </div>
-              <span className="text-sm text-[var(--fg-secondary)]">{momentumPct}%</span>
-            </div>
-            <p className="mt-1 text-xs text-[var(--fg-muted)]">
-              {activeThreads.length}/{threads.length} active
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Narrative Gravity</h3>
+            <p className="mt-2 text-sm text-[var(--fg-secondary)]">
+              Major characters bend the story field. Plot threads form arcs of influence.
             </p>
+            <div className="mt-3 space-y-2 text-xs text-[var(--fg-muted)]">
+              <div className="flex items-center justify-between">
+                <span>Character Wells</span>
+                <span className="text-emerald-400">{Math.max(2, characters.length)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Event Bursts</span>
+                <span className="text-amber-400">{Math.max(4, timelineEvents.length)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Thread Arcs</span>
+                <span className="text-violet-300">{Math.max(3, threads.length)}</span>
+              </div>
+            </div>
           </div>
 
           <div className="cosmos-card rounded-lg p-4">
-            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Cast</h3>
-            {characters.length === 0 ? (
-              <p className="mt-2 text-sm text-[var(--fg-muted)]">None yet</p>
-            ) : (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {characters.slice(0, 6).map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/cast?c=${c.id}`}
-                    className="rounded-full border border-[rgba(139,92,246,0.3)] px-2.5 py-0.5 text-xs text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]"
-                  >
-                    {c.name}
-                  </Link>
-                ))}
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Oracle Layer</h3>
+            <p className="mt-2 text-sm text-[var(--fg-secondary)]">
+              Ask the Oracle. It simulates psychology, memory, and goals to surface probable outcomes.
+            </p>
+            <div className="oracle-prompt mt-3">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--fg-muted)]">Oracle Query</p>
+              <p className="mt-1 text-sm text-[var(--fg-primary)]">“What would Marcus do if the river fractures?”</p>
+              <div className="mt-2 flex items-center gap-2 text-xs text-[var(--fg-muted)]">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent)]" />
+                <span>Simulating narrative outcomes...</span>
               </div>
-            )}
-            <Link href="/cast" className="link-glow mt-2 block text-xs transition-all">
-              View Cast →
-            </Link>
+            </div>
+          </div>
+
+          <div className="cosmos-card rounded-lg p-4">
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Story Echoes</h3>
+            <ul className="mt-2 space-y-2 text-xs text-[var(--fg-secondary)]">
+              <li className="echo-item">Echo: “Betrayal in Act I” ↔ “Silent vow in Act III”</li>
+              <li className="echo-item">Echo: “Storm Gate collapse” ↔ “River betrayal ripple”</li>
+              <li className="echo-item">Echo: “Constellation oath” ↔ “Final tribunal”</li>
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* AI Thought Stream */}
-      {insightItems.length > 0 && (
-        <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
-          <h3 className="section-label text-xs font-medium uppercase tracking-wide">AI Thought Stream</h3>
-          <ul className="mt-3 space-y-3">
-            {insightItems.map((item, i) => (
-              <li
-                key={i}
-                className={`rounded-md border-l-2 p-2 pl-3 text-sm ${
-                  item.type === "opportunity"
-                    ? "border-emerald-500/50 bg-emerald-500/5"
-                    : "border-[rgba(139,92,246,0.4)] bg-[rgba(139,92,246,0.05)]"
-                }`}
-              >
-                <p className="font-medium text-[var(--fg-primary)]">{item.title}</p>
-                <p className="mt-0.5 text-[var(--fg-muted)]">{item.description}</p>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-2 flex gap-3">
-            <Link href="/universe?tab=strategy" className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">Strategy →</Link>
-            <Link href="/universe?tab=oracle" className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">Oracle →</Link>
-          </div>
-        </div>
-      )}
-
-      {/* Timeline sliver */}
-      {timelineEvents.length > 0 && (
-        <div className="cosmos-card rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Timeline</h3>
-            <Link href="/river" className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">
-              Open River →
-            </Link>
-          </div>
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
-            {timelineEvents.slice(0, 8).map((ev, i) => (
-              <div
-                key={ev.id}
-                className="flex shrink-0 flex-col items-center rounded-md border border-[rgba(139,92,246,0.25)] bg-[rgba(139,92,246,0.08)] px-3 py-2"
-              >
-                <span className="text-xs text-[var(--fg-muted)]">{i + 1}</span>
-                <span className="mt-1 max-w-[80px] truncate text-xs text-[var(--fg-secondary)]">{ev.name}</span>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="cosmos-card rounded-lg p-5">
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">Temporal River Engine</h3>
+          <div className="river-band mt-4">
+            {(timelineEvents.length ? timelineEvents : new Array(6).fill(null)).slice(0, 6).map((ev, i) => (
+              <div key={ev?.id ?? i} className="river-stone">
+                <span className="text-[10px] text-[var(--fg-muted)]">{i + 1}</span>
+                <span className="text-xs text-[var(--fg-secondary)]">{ev?.name ?? `Scene ${i + 1}`}</span>
               </div>
             ))}
+            <div className="river-ripple" />
+          </div>
+          <p className="mt-3 text-sm text-[var(--fg-muted)]">
+            Events create ripples of causality downstream. Currents reveal plot momentum.
+          </p>
+        </div>
+
+        <div className="cosmos-card rounded-lg p-5">
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">Plot Loom Field</h3>
+          <div className="loom-field mt-4">
+            {(threads.length ? threads : new Array(5).fill(null)).slice(0, 5).map((t, i) => (
+              <div key={t?.id ?? i} className={`loom-thread ${i % 3 === 0 ? "loom-rise" : i % 3 === 1 ? "loom-dormant" : "loom-resolve"}`}>
+                <span className="text-xs text-[var(--fg-secondary)]">{t?.name ?? `Thread ${i + 1}`}</span>
+              </div>
+            ))}
+            <div className="loom-knot">Knot</div>
+          </div>
+          <p className="mt-3 text-sm text-[var(--fg-muted)]">
+            Tension glows across threads. Intersections form narrative knots.
+          </p>
+        </div>
+
+        <div className="cosmos-card rounded-lg p-5">
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">Character Mindspace</h3>
+          <div className="mindspace mt-4">
+            <div className="mind-node">Desire</div>
+            <div className="mind-node">Fear</div>
+            <div className="mind-node">Secret</div>
+            <div className="mind-node">Loyalty</div>
+            <div className="mind-link" />
+          </div>
+          <p className="mt-3 text-sm text-[var(--fg-muted)]">
+            Psychological nodes map motive, conflict, and hidden connections.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="cosmos-card rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Living Writing Surface</h3>
+            <span className="text-xs text-[var(--fg-muted)]">Flow Mode</span>
+          </div>
+          <div className="writing-surface mt-4">
+            <p>
+              The <span className="concept-glow">river</span> hums as Marcus steps into the storm. The
+              <span className="concept-glow">constellation oath</span> tightens, and the
+              <span className="concept-glow">betrayal</span> signal pulses downstream.
+            </p>
+            <div className="writing-signals">
+              <span className="signal-pill">Character Presence: Marcus + Ilyra</span>
+              <span className="signal-pill">Continuity Risk: LOW</span>
+              <span className="signal-pill">Style DNA: 92% match</span>
+              <span className="signal-pill">Plot Thread: Storm Gate</span>
+            </div>
           </div>
         </div>
-      )}
+        <div className="cosmos-card rounded-lg p-6">
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">Style DNA Lab</h3>
+          <div className="dna-helix mt-4">
+            <div className="dna-strand" />
+            <div className="dna-strand" />
+            <div className="dna-rung" />
+            <div className="dna-rung" />
+            <div className="dna-rung" />
+          </div>
+          <p className="mt-3 text-sm text-[var(--fg-muted)]">
+            Sentence rhythm, tone distribution, and dialogue signature converge into a living helix.
+          </p>
+          <div className="mt-4 text-xs text-[var(--fg-secondary)]">
+            AI alignment: <span className="text-emerald-400">Synced</span>
+          </div>
+        </div>
+      </div>
 
-      {/* Quick links */}
-      <div className="flex flex-wrap gap-2 border-t border-[rgba(139,92,246,0.15)] pt-6">
-        <Link href="/pulse" className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg-primary)]">Pulse</Link>
-        <Link href="/signal" className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg-primary)]">Signal</Link>
-        <Link href="/memories" className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg-primary)]">Memories</Link>
-        <Link href="/graph" className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg-primary)]">Knowledge Graph</Link>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="cosmos-card rounded-lg p-6">
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">Narrative Heatmap</h3>
+          <div className="heatmap mt-4">
+            {new Array(28).fill(null).map((_, i) => (
+              <span key={i} className={`heat-cell heat-${(i % 7) + 1}`} />
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-[var(--fg-muted)]">Visualize emotional intensity across the entire story.</p>
+        </div>
+        <div className="cosmos-card rounded-lg p-6">
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">Story Drift + Resonance</h3>
+          <div className="mt-4 space-y-3 text-sm text-[var(--fg-secondary)]">
+            <div className="drift-row">
+              <span>Story Drift</span>
+              <span className="text-amber-300">Minor</span>
+            </div>
+            <div className="drift-row">
+              <span>Plot Resonance</span>
+              <span className="text-emerald-400">High</span>
+            </div>
+            <div className="drift-row">
+              <span>Narrative Storms</span>
+              <span className="text-violet-300">2 Active</span>
+            </div>
+          </div>
+          <div className="storm-cluster mt-4">
+            <div className="storm-node" />
+            <div className="storm-node" />
+            <div className="storm-node" />
+          </div>
+        </div>
       </div>
     </div>
   );

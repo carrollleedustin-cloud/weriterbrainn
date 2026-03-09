@@ -192,8 +192,6 @@ function ProductivityChart({ eventCounts }: { eventCounts: EventCount[] }) {
       <div className="flex items-end gap-1" style={{ minHeight: 120 }}>
       {dates.map((d) => {
         const v = byDate.get(d)!;
-        const total = v.accepted + v.regenerated + v.edited;
-        const h = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
         return (
           <div
             key={d}
