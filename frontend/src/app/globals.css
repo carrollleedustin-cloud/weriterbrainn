@@ -237,3 +237,71 @@ body::before {
 .animate-node-glow {
   animation: nodeGlow 2s ease-in-out infinite;
 }
+
+/* ===== Visual Upgrade: Card & Panel Styles ===== */
+.cosmos-card {
+  background: linear-gradient(145deg, rgba(19, 16, 28, 0.95), rgba(13, 11, 20, 0.9));
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cosmos-card:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.08);
+}
+
+.cosmos-panel {
+  background: linear-gradient(180deg, rgba(24, 20, 36, 0.9), rgba(16, 13, 24, 0.95));
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cosmos-graph-bg {
+  background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(139, 92, 246, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(192, 132, 252, 0.05), transparent 50%),
+    linear-gradient(180deg, rgba(15, 12, 24, 0.98), rgba(8, 6, 14, 0.99));
+}
+
+.glow-border {
+  position: relative;
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.15), inset 0 0 60px rgba(139, 92, 246, 0.02);
+}
+
+/* Section headers */
+.section-label {
+  letter-spacing: 0.12em;
+  color: rgba(167, 139, 250, 0.85);
+}
+
+/* Buttons & links */
+.btn-cosmos {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  transition: all 0.2s;
+}
+.btn-cosmos:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.15));
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.link-glow {
+  color: rgba(167, 139, 250, 0.95);
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+}
+.link-glow:hover {
+  color: #c4b5fd;
+  text-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+}
+
+/* Tab pills */
+.tab-pill {
+  transition: all 0.2s;
+}
+.tab-pill:hover {
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
+}
+.tab-pill-active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.15));
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}

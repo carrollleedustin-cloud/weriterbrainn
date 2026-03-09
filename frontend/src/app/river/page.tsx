@@ -81,7 +81,7 @@ export default function RiverPage() {
       </div>
 
       {events.length === 0 ? (
-        <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-8 text-center">
+        <div className="cosmos-card rounded-xl p-8 text-center">
           <p className="text-[var(--fg-muted)]">No events yet.</p>
           <p className="mt-2 text-sm text-[var(--fg-muted)]">
             Extract narrative text in Story Universe to build the timeline.
@@ -104,7 +104,7 @@ export default function RiverPage() {
                   <div
                     onMouseEnter={() => setHovered(ev.id)}
                     onMouseLeave={() => setHovered(null)}
-                    className={`group relative flex w-44 flex-col rounded-lg border p-4 transition-all ${(ev.caused_by?.length ?? 0) > 0 ? "animate-ripple" : ""} ${
+                    className={`group relative flex w-44 flex-col rounded-xl cosmos-card p-4 transition-all ${(ev.caused_by?.length ?? 0) > 0 ? "animate-ripple border-[rgba(139,92,246,0.35)]" : ""} ${
                       hovered === ev.id
                         ? "border-[rgba(139,92,246,0.5)] bg-[rgba(139,92,246,0.12)] shadow-md"
                         : "border-[rgba(139,92,246,0.25)] bg-[var(--bg-raised)]/80 hover:border-[rgba(139,92,246,0.35)]"

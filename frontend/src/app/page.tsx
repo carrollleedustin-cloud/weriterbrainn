@@ -168,7 +168,7 @@ export default function Home() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--fg-primary)]">
             Narrative Command Center
           </h1>
           <p className="text-sm text-[var(--fg-muted)]">
@@ -178,13 +178,13 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <Link
             href="/universe"
-            className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-1.5 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]"
+            className="btn-cosmos rounded-lg px-4 py-2 text-sm text-[var(--fg-secondary)]"
           >
             Story Universe
           </Link>
           <Link
             href="/chat"
-            className="rounded-md bg-[rgba(139,92,246,0.2)] px-3 py-1.5 text-sm text-[var(--fg-primary)] hover:bg-[rgba(139,92,246,0.3)]"
+            className="rounded-lg bg-[linear-gradient(135deg,rgba(139,92,246,0.35),rgba(139,92,246,0.2))] px-4 py-2 text-sm font-medium text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition hover:shadow-[0_0_28px_rgba(139,92,246,0.4)]"
           >
             AI Chat
           </Link>
@@ -193,7 +193,7 @@ export default function Home() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
         {/* Story Galaxy — center */}
-        <div className="relative min-h-[420px] overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.25)] bg-[linear-gradient(180deg,rgba(20,16,32,0.9),rgba(10,8,18,0.95))]" role="region" aria-label="Story Cosmos">
+        <div className="cosmos-panel cosmos-graph-bg relative min-h-[420px] overflow-hidden rounded-[var(--radius-lg)] glow-border" role="region" aria-label="Story Cosmos">
           {!hasStory ? (
             <div className="flex h-[420px] flex-col items-center justify-center gap-4 text-center">
               <p className="text-[var(--fg-muted)]">No story data yet.</p>
@@ -232,7 +232,7 @@ export default function Home() {
                 onBackgroundClick={() => setSelectedNode(null)}
               />
               {selectedNode && (
-                <div className="absolute bottom-4 left-4 right-4 z-10 rounded-md border border-[rgba(139,92,246,0.3)] bg-[var(--bg-base)]/95 p-4 shadow-lg backdrop-blur">
+                <div className="absolute bottom-4 left-4 right-4 z-10 rounded-lg cosmos-card border-[rgba(139,92,246,0.4)] p-4 shadow-xl backdrop-blur-md">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-medium text-[var(--fg-primary)]">{selectedNode.name}</p>
@@ -255,8 +255,8 @@ export default function Home() {
 
         {/* Sidebar: Active Threads, Momentum, Cast */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Active threads</h3>
+          <div className="cosmos-card rounded-lg p-4">
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Active threads</h3>
             {threads.length === 0 ? (
               <p className="mt-2 text-sm text-[var(--fg-muted)]">None yet</p>
             ) : (
@@ -274,13 +274,13 @@ export default function Home() {
                 })}
               </ul>
             )}
-            <Link href="/loom" className="mt-2 block text-xs text-[rgba(139,92,246,0.9)] hover:underline">
+            <Link href="/loom" className="link-glow mt-2 block text-xs transition-all">
               View Loom →
             </Link>
           </div>
 
-          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Momentum</h3>
+          <div className="cosmos-card rounded-lg p-4">
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Momentum</h3>
             <div className="mt-2 flex items-center gap-2">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(139,92,246,0.15)]">
                 <div
@@ -295,8 +295,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Cast</h3>
+          <div className="cosmos-card rounded-lg p-4">
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Cast</h3>
             {characters.length === 0 ? (
               <p className="mt-2 text-sm text-[var(--fg-muted)]">None yet</p>
             ) : (
@@ -312,7 +312,7 @@ export default function Home() {
                 ))}
               </div>
             )}
-            <Link href="/cast" className="mt-2 block text-xs text-[rgba(139,92,246,0.9)] hover:underline">
+            <Link href="/cast" className="link-glow mt-2 block text-xs transition-all">
               View Cast →
             </Link>
           </div>
@@ -322,7 +322,7 @@ export default function Home() {
       {/* AI Thought Stream */}
       {insightItems.length > 0 && (
         <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">AI Thought Stream</h3>
+          <h3 className="section-label text-xs font-medium uppercase tracking-wide">AI Thought Stream</h3>
           <ul className="mt-3 space-y-3">
             {insightItems.map((item, i) => (
               <li
@@ -347,9 +347,9 @@ export default function Home() {
 
       {/* Timeline sliver */}
       {timelineEvents.length > 0 && (
-        <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+        <div className="cosmos-card rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">Timeline</h3>
+            <h3 className="section-label text-xs font-medium uppercase tracking-wide">Timeline</h3>
             <Link href="/river" className="text-xs text-[rgba(139,92,246,0.9)] hover:underline">
               Open River →
             </Link>

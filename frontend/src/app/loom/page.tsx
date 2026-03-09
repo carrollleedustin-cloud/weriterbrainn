@@ -104,7 +104,7 @@ export default function LoomPage() {
       </div>
 
       {threads.length === 0 ? (
-        <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-8 text-center">
+        <div className="cosmos-card rounded-xl p-8 text-center">
           <p className="text-[var(--fg-muted)]">No plot threads yet.</p>
           <p className="mt-2 text-sm text-[var(--fg-muted)]">
             Extract narrative text in Story Universe to discover threads.
@@ -135,7 +135,7 @@ export default function LoomPage() {
               <div
                 key={t.id}
                 onClick={() => setExpanded((prev) => (prev === t.id ? null : t.id))}
-                className={`cursor-pointer rounded-lg border p-4 transition-all ${
+                className={`cursor-pointer rounded-xl cosmos-card p-4 transition-all ${
                   status === "active"
                     ? "border-[rgba(139,92,246,0.4)] bg-[rgba(139,92,246,0.08)] shadow-[0_0_12px_rgba(139,92,246,0.2)]"
                     : status === "dormant"

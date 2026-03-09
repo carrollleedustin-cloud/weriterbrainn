@@ -375,10 +375,8 @@ function UniverseContent() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-md px-3 py-1.5 text-sm capitalize transition-colors ${
-              tab === t
-                ? "bg-[rgba(139,92,246,0.25)] text-[var(--fg-primary)]"
-                : "text-[var(--fg-muted)] hover:bg-[rgba(139,92,246,0.1)]"
+            className={`tab-pill rounded-lg px-4 py-2 text-sm capitalize ${
+              tab === t ? "tab-pill-active text-[var(--fg-primary)]" : "text-[var(--fg-muted)]"
             }`}
           >
             {t === "qa" ? "Q&A" : t === "canon" ? "Canon" : t === "oracle" ? "Oracle" : t === "heatmap" ? "Heatmap" : t}
@@ -485,7 +483,7 @@ function UniverseContent() {
                   const isCritical = severity === "critical" || tier === "canon_break";
                   const isHigh = severity === "high" || tier === "likely_contradiction";
                   return (
-                    <li key={i} className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3 text-sm">
+                    <li key={i} className="cosmos-card rounded-lg p-3 text-sm">
                       <div className="flex items-center gap-2">
                         <span className={`font-medium ${isCritical ? "text-red-400" : isHigh ? "text-amber-400" : "text-[var(--fg-secondary)]"}`}>
                           {category ?? tier ?? "issue"}
@@ -581,7 +579,7 @@ function UniverseContent() {
         ) : (
           <ol className="space-y-3">
             {timelineEvents.map((ev, i) => (
-              <li key={ev.id} className="flex gap-3 rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3">
+              <li key={ev.id} className="cosmos-card flex gap-3 rounded-lg p-3">
                 <span className="text-[var(--fg-muted)] shrink-0 font-mono text-sm">{i + 1}</span>
                 <div>
                   <p className="font-medium text-[var(--fg-primary)]">{ev.name}</p>
@@ -606,7 +604,7 @@ function UniverseContent() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {plotThreads.map((t) => (
-              <div key={t.id} className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+              <div key={t.id} className="cosmos-card rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-[var(--fg-primary)]">{t.name}</p>
                   <span className="rounded-full bg-[rgba(139,92,246,0.2)] px-2 py-0.5 text-xs text-[var(--fg-secondary)]">{t.status}</span>
@@ -674,7 +672,7 @@ function UniverseContent() {
         ) : (
           <div className="space-y-2">
             {canonFacts.map((f) => (
-              <div key={f.id} className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3">
+              <div key={f.id} className="cosmos-card rounded-lg p-3">
                 <p className="text-[var(--fg-primary)]">{f.fact_value}</p>
                 <div className="mt-1 flex flex-wrap gap-2 text-xs text-[var(--fg-muted)]">
                   <span>{f.fact_type}</span>
@@ -815,7 +813,7 @@ function UniverseContent() {
       )}
 
       {tab === "universe" && (
-      <div className="h-[520px] overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.25)] bg-[linear-gradient(180deg,rgba(20,16,32,0.9),rgba(10,8,18,0.95))] shadow-[var(--shadow-md)]">
+      <div className="cosmos-panel cosmos-graph-bg glow-border h-[520px] overflow-hidden rounded-xl">
         {loading ? (
           <SkeletonGraph />
         ) : authRequired ? (
@@ -851,7 +849,7 @@ function UniverseContent() {
 
       {tab === "universe" && !authRequired && objects.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+          <div className="cosmos-card rounded-xl p-4">
             <h3 className="text-sm font-medium text-[var(--fg-muted)]">
               Characters
             </h3>
@@ -859,13 +857,13 @@ function UniverseContent() {
               {objects.filter((o) => o.object_type === "character").length}
             </p>
           </div>
-          <div className="rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+          <div className="cosmos-card rounded-xl p-4">
             <h3 className="text-sm font-medium text-[var(--fg-muted)]">Events</h3>
             <p className="text-2xl font-semibold text-[var(--fg-primary)]">
               {objects.filter((o) => o.object_type === "event").length}
             </p>
           </div>
-          <div className="rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+          <div className="cosmos-card rounded-xl p-4">
             <h3 className="text-sm font-medium text-[var(--fg-muted)]">
               Plot threads
             </h3>

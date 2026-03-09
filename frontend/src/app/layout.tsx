@@ -76,10 +76,11 @@ export default function RootLayout({
         <ShortcutsProvider>
         <main className="mx-auto max-w-6xl px-4 py-8">
           <div className="relative">
-            <div className="pointer-events-none absolute -top-20 right-6 h-32 w-32 rounded-full bg-[rgba(139,92,246,0.25)] blur-3xl animate-float-glow" />
-            <div className="pointer-events-none absolute -bottom-24 left-8 h-40 w-40 rounded-full bg-[rgba(192,132,252,0.2)] blur-3xl animate-float-glow" />
-            <div className="aurora-border relative z-[1]">
-              <div className="rounded-[var(--radius-lg)] bg-[var(--bg-raised)]/70 p-6 shadow-[var(--shadow-md)]">
+            <div className="pointer-events-none absolute -top-20 right-6 h-48 w-48 rounded-full bg-[rgba(139,92,246,0.2)] blur-3xl animate-float-glow" />
+            <div className="pointer-events-none absolute -bottom-24 left-8 h-56 w-56 rounded-full bg-[rgba(192,132,252,0.15)] blur-3xl animate-float-glow" />
+            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-[rgba(139,92,246,0.04)] blur-3xl" />
+            <div className="aurora-border relative z-[1] glow-border">
+              <div className="rounded-[var(--radius-lg)] cosmos-panel p-6 sm:p-8">
                 {children}
               </div>
             </div>

@@ -128,7 +128,7 @@ export default function SignalPage() {
           ))}
         </div>
       ) : alerts.length === 0 && !authRequired ? (
-        <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-6 text-center">
+        <div className="cosmos-card rounded-xl p-8 text-center">
           <p className="text-[var(--fg-secondary)]">No signals yet.</p>
           <p className="mt-2 text-sm text-[var(--fg-muted)]">
             Extract narrative text and run Compile to surface continuity pressure, pacing suggestions, and opportunities.
@@ -142,7 +142,7 @@ export default function SignalPage() {
           {alerts.map((a, i) => (
             <div
               key={i}
-              className={`rounded-md border p-4 ${
+              className={`rounded-xl cosmos-card p-4 ${
                 a.category === "opportunity"
                   ? "border-emerald-500/30 bg-emerald-500/5"
                   : a.severity === "high"

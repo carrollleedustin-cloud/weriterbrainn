@@ -85,7 +85,7 @@ export default function WritingPage() {
         <div className="space-y-3 relative">
           {!flowMode && (
             <div className="space-y-2">
-              <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-2">
+              <div className="cosmos-card rounded-lg p-3">
                 <p className="text-xs text-[var(--fg-muted)] mb-1">Narrative energy</p>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(139,92,246,0.15)]">
                   <div className="h-full rounded-full bg-[linear-gradient(90deg,rgba(139,92,246,0.5),rgba(192,132,252,0.8))] transition-all" style={{ width: `${energyLevel}%` }} />
@@ -93,7 +93,7 @@ export default function WritingPage() {
                 <p className="text-xs text-[var(--fg-muted)] mt-0.5">{energyLevel}%</p>
               </div>
               {charsInText.length > 0 && (
-            <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-3 flex flex-wrap gap-2">
+            <div className="cosmos-card rounded-lg p-3 flex flex-wrap gap-2">
               <span className="text-xs text-[var(--fg-muted)]">Characters in scene:</span>
               {charsInText.map((c) => (
                 <Link key={c.id} href={`/cast?c=${c.id}`} className="rounded-full bg-[rgba(139,92,246,0.2)] px-2 py-0.5 text-xs text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.3)]">

@@ -102,17 +102,17 @@ function CastContent() {
               <button
                 key={c.id}
                 onClick={() => setSelected({ id: c.id, name: c.name })}
-                className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all ${
                   selected?.id === c.id
-                    ? "bg-[rgba(139,92,246,0.25)] text-[var(--fg-primary)]"
-                    : "text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]"
+                    ? "bg-[linear-gradient(135deg,rgba(139,92,246,0.3),rgba(139,92,246,0.15))] text-[var(--fg-primary)] shadow-[0_0_16px_rgba(139,92,246,0.2)]"
+                    : "text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.12)]"
                 }`}
               >
                 {c.name}
               </button>
             ))}
           </div>
-          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+          <div className="cosmos-card rounded-lg p-4">
             {selected ? (
               details ? (
                 <div className="space-y-4">

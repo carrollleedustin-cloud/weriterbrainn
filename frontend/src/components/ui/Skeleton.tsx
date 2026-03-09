@@ -16,7 +16,7 @@ export function Skeleton({
 /** Card-shaped skeleton for Pulse/Universe stats */
 export function SkeletonCard() {
   return (
-    <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4">
+    <div className="cosmos-card rounded-lg p-4">
       <Skeleton className="h-4 w-24" />
       <Skeleton className="mt-3 h-8 w-16" />
       <Skeleton className="mt-2 h-3 w-full" />
@@ -38,7 +38,7 @@ export function SkeletonCardGrid({ count = 4 }: { count?: number }) {
 /** Tall skeleton for graph/canvas area */
 export function SkeletonGraph() {
   return (
-    <div className="flex h-[520px] flex-col items-center justify-center gap-4 rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.25)] bg-[var(--bg-raised)]/50">
+    <div className="cosmos-panel flex h-[520px] flex-col items-center justify-center gap-4 rounded-xl">
       <Skeleton className="h-4 w-32" />
       <Skeleton className="h-3 w-48" />
     </div>
