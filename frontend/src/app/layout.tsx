@@ -27,6 +27,8 @@ const navLinks = [
   { href: "/universe", label: "Story Universe" },
   { href: "/cast", label: "Cast" },
   { href: "/signal", label: "Signal" },
+  { href: "/river", label: "River" },
+  { href: "/loom", label: "Loom" },
   { href: "/memories", label: "Memories" },
   { href: "/graph", label: "Knowledge Graph" },
   { href: "/writing", label: "Writing" },

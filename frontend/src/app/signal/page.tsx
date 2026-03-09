@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   getNarrativeStrategy,
   getNarrativePlotThreads,
@@ -117,7 +118,15 @@ export default function SignalPage() {
       )}
 
       {loading && !authRequired ? (
-        <p className="text-[var(--fg-muted)]">Loading...</p>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-md border border-[rgba(139,92,246,0.2)] p-4 space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-5 w-[75%]" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ))}
+        </div>
       ) : alerts.length === 0 && !authRequired ? (
         <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-6 text-center">
           <p className="text-[var(--fg-secondary)]">No signals yet.</p>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getNarrativeStrategy, getNarrativePlotThreads, getNarrativeObjects, getCanonFacts, getMe } from "@/lib/api";
+import { SkeletonCardGrid } from "@/components/ui/Skeleton";
 
 export default function PulsePage() {
   const [strategy, setStrategy] = useState<{
@@ -60,7 +61,7 @@ export default function PulsePage() {
       )}
 
       {loading && !authRequired ? (
-        <p className="text-[var(--fg-muted)]">Loading...</p>
+        <SkeletonCardGrid count={4} />
       ) : (
         <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -127,10 +128,10 @@ export default function PulsePage() {
         <Link href="/universe?tab=compile" className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-2 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]">
           Compile
         </Link>
-        <Link href="/universe?tab=timeline" className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-2 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]">
+        <Link href="/river" className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-2 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]">
           River
         </Link>
-        <Link href="/universe?tab=threads" className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-2 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]">
+        <Link href="/loom" className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-2 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]">
           Loom
         </Link>
         <Link href="/cast" className="rounded-md border border-[rgba(139,92,246,0.3)] px-3 py-2 text-sm text-[var(--fg-secondary)] hover:bg-[rgba(139,92,246,0.1)]">

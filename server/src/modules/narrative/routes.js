@@ -42,6 +42,7 @@ router.get("/project", async (req, res) => {
 });
 
 router.get("/objects", async (req, res) => {
+  res.set("Cache-Control", "private, max-age=2");
   try {
     if (!req.userId) {
       return res.status(401).json({ detail: "Authentication required" });
@@ -79,6 +80,7 @@ router.post("/compile", validate(narrativeCompileSchema), async (req, res) => {
 });
 
 router.get("/timeline", async (req, res) => {
+  res.set("Cache-Control", "private, max-age=2");
   try {
     if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
     const result = await container.timelineService.getTimeline(req.userId);
@@ -90,6 +92,7 @@ router.get("/timeline", async (req, res) => {
 });
 
 router.get("/plot-threads", async (req, res) => {
+  res.set("Cache-Control", "private, max-age=2");
   try {
     if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
     const result = await container.plotThreadService.getPlotThreads(req.userId);
@@ -101,6 +104,7 @@ router.get("/plot-threads", async (req, res) => {
 });
 
 router.get("/strategy", async (req, res) => {
+  res.set("Cache-Control", "private, max-age=2");
   try {
     if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
     const focus = req.query.focus || null;
@@ -184,6 +188,7 @@ router.get("/ask", validate(narrativeQuerySchema, "query"), async (req, res) => 
 });
 
 router.get("/canon/facts", async (req, res) => {
+  res.set("Cache-Control", "private, max-age=2");
   try {
     if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
     const canonState = req.query.state || null;
@@ -213,6 +218,7 @@ router.get("/canon/facts/:factId", async (req, res) => {
 });
 
 router.get("/edges", async (req, res) => {
+  res.set("Cache-Control", "private, max-age=2");
   try {
     if (!req.userId) {
       return res.status(401).json({ detail: "Authentication required" });

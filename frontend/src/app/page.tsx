@@ -42,6 +42,8 @@ export default function Home() {
           { href: "/chat", title: "AI Chat", desc: "Streaming dialogue with contextual memory and citations." },
           { href: "/cast", title: "Cast", desc: "Character intelligence — goals, fears, relationships." },
           { href: "/signal", title: "Signal", desc: "Alerts, continuity pressure, opportunities." },
+          { href: "/river", title: "River", desc: "Timeline + causality — scenes, chapters, cause and effect." },
+          { href: "/loom", title: "Loom", desc: "Plot threads — payoffs, pressure, dormancy." },
           { href: "/memories", title: "Memory Explorer", desc: "Semantic search, timelines, and memory tiers." },
           { href: "/graph", title: "Knowledge Graph", desc: "Relational view of concepts, people, and beliefs." },
           { href: "/writing", title: "Writing Studio", desc: "Rewrite, expand, and mimic your cognitive style." },

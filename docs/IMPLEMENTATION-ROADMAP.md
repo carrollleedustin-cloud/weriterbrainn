@@ -196,3 +196,12 @@ Execution plan derived from [ARCHITECTURE-AUDIT.md](./ARCHITECTURE-AUDIT.md).
 |------|--------|
 | Structured response | ✅ reasoning_summary, related_entities |
 | Uncertainty | ✅ ambiguity_notes, contradictory_evidence |
+
+### Workspace Pages ✅
+
+| Task | Status |
+|------|--------|
+| Signal | ✅ /signal — alerts, continuity pressure, opportunities |
+| River | ✅ /river — timeline + causality (→ Universe Timeline) |
+| Loom | ✅ /loom — plot threads (→ Universe Threads) |
+| Cast trust edges | ✅ trust_edges displayed in character detail |

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
+import { SkeletonGraph } from "@/components/ui/Skeleton";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
@@ -121,6 +122,7 @@ function UniverseContent() {
   const [qaLoading, setQaLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
@@ -188,13 +190,21 @@ function UniverseContent() {
     }
   }, [tab, authRequired]);
 
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSuccess(null), 4000);
+    return () => clearTimeout(t);
+  }, [success]);
+
   const handleExtract = async () => {
     if (!extractText.trim()) return;
     setExtracting(true);
     setError(null);
+    setSuccess(null);
     try {
       await narrativeExtract(extractText.trim());
       setExtractText("");
+      setSuccess("Extraction complete — universe updated.");
       await load();
     } catch (err) {
       setError(
@@ -234,9 +244,11 @@ function UniverseContent() {
     if (!compileText.trim()) return;
     setCompiling(true);
     setError(null);
+    setSuccess(null);
     try {
       const result = await narrativeCompile(compileText.trim());
       setCompileResult(result);
+      setSuccess(result.overall_tier === "ok" ? "Compile passed — no issues." : "Compile complete.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Compile failed");
       setCompileResult(null);
@@ -271,7 +283,7 @@ function UniverseContent() {
     }
   };
 
-  const graphData = {
+  const graphData = useMemo(() => ({
     nodes: objects.map((o) => ({
       id: o.id,
       name: o.name,
@@ -283,7 +295,7 @@ function UniverseContent() {
       target: e.target_id,
       type: e.edge_type,
     })),
-  };
+  }), [objects, edges]);
 
   const typeColor = (t: string) => {
     switch (t) {
@@ -496,6 +508,11 @@ function UniverseContent() {
       </div>
       )}
 
+      {success && (
+        <div className="rounded-[var(--radius-md)] border border-emerald-500/30 bg-emerald-500/10 p-2 text-emerald-200">
+          {success}
+        </div>
+      )}
       {error && (
         <div className="rounded-[var(--radius-md)] border border-red-500/30 bg-red-500/10 p-2 text-red-300">
           {error}
@@ -631,8 +648,8 @@ function UniverseContent() {
             className="flex-1 rounded-md border border-[rgba(139,92,246,0.3)] bg-[var(--bg-base)] px-3 py-2 text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)]"
             onKeyDown={(e) => e.key === "Enter" && handleAsk()}
           />
-          <Button onClick={handleAsk} disabled={qaLoading || !qaQuestion.trim() || authRequired}>
-            {qaLoading ? "..." : "Ask"}
+          <Button onClick={handleAsk} disabled={qaLoading || !qaQuestion.trim() || authRequired} aria-busy={qaLoading}>
+            {qaLoading ? "Asking…" : "Ask"}
           </Button>
         </div>
         {qaResult && (
@@ -684,9 +701,7 @@ function UniverseContent() {
       {tab === "universe" && (
       <div className="h-[520px] overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.25)] bg-[linear-gradient(180deg,rgba(20,16,32,0.9),rgba(10,8,18,0.95))] shadow-[var(--shadow-md)]">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-[var(--fg-muted)]">
-            Loading universe...
-          </div>
+          <SkeletonGraph />
         ) : authRequired ? (
           <div className="flex h-full items-center justify-center text-[var(--fg-muted)]">
             Sign in to view your story universe.
@@ -750,7 +765,7 @@ function UniverseContent() {
 
 export default function UniversePage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center p-12 text-[var(--fg-muted)]">Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="h-8 w-32 animate-pulse rounded bg-[rgba(139,92,246,0.15)]" /></div>}>
       <UniverseContent />
     </Suspense>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getNarrativeCharacters, getCharacterDetails, getMe } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type Character = { id: string; name: string; summary?: string; metadata?: Record<string, unknown> };
 
@@ -70,7 +71,18 @@ export default function CastPage() {
       )}
 
       {loading && !authRequired ? (
-        <p className="text-[var(--fg-muted)]">Loading...</p>
+        <div className="grid gap-4 sm:grid-cols-[220px_1fr]">
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+          <div className="rounded-md border border-[rgba(139,92,246,0.2)] bg-[var(--bg-raised)]/80 p-4 space-y-4">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </div>
       ) : characters.length === 0 && !authRequired ? (
         <p className="text-[var(--fg-muted)]">No characters yet. Extract narrative text in Story Universe to build your cast.</p>
       ) : (
@@ -200,7 +212,13 @@ export default function CastPage() {
                   ) : null}
                 </div>
               ) : (
-                <p className="text-[var(--fg-muted)]">Loading details...</p>
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-[85%]" />
+                  <Skeleton className="h-4 w-20 mt-4" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
               )
             ) : (
               <p className="text-[var(--fg-muted)]">Select a character</p>
