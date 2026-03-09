@@ -195,6 +195,26 @@ export async function narrativeAsk(q: string) {
   return res.json();
 }
 
+export async function oracleSimulate(character: string, situation: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/oracle/simulate`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ character, situation }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function storyEchoes(context: string) {
+  const res = await fetch(`${API_BASE}/api/v1/narrative/echoes`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ context }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getNarrativeCharacters() {
   const res = await fetch(`${API_BASE}/api/v1/narrative/characters`, {
     headers: apiHeaders(),

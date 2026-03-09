@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { getNarrativeCharacters, getCharacterDetails, getMe } from "@/lib/api";
-import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 type Character = { id: string; name: string; summary?: string; metadata?: Record<string, unknown> };
 
-export default function CastPage() {
+function CastContent() {
+  const searchParams = useSearchParams();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [details, setDetails] = useState<{
@@ -45,6 +47,14 @@ export default function CastPage() {
         .finally(() => setLoading(false));
     });
   }, []);
+
+  useEffect(() => {
+    const cId = searchParams.get("c");
+    if (cId && characters.length > 0) {
+      const ch = characters.find((x) => x.id === cId);
+      if (ch && selected?.id !== cId) setSelected({ id: ch.id, name: ch.name });
+    }
+  }, [searchParams, characters, selected?.id]);
 
   useEffect(() => {
     if (!selected) {
@@ -108,6 +118,26 @@ export default function CastPage() {
                 <div className="space-y-4">
                   <h2 className="text-lg font-medium text-[var(--fg-primary)]">{details.name ?? selected.name}</h2>
                   {details.summary && <p className="text-sm text-[var(--fg-muted)]">{details.summary}</p>}
+                  {/* Character Mindspace — trait nodes */}
+                  {((details.metadata?.goals?.length || 0) + (details.metadata?.fears?.length || 0) + (details.metadata?.beliefs?.length || 0) + (details.metadata?.desires?.length || 0)) > 0 && (
+                    <div className="rounded-lg border border-[rgba(139,92,246,0.25)] bg-[linear-gradient(180deg,rgba(20,16,32,0.6),rgba(10,8,18,0.8))] p-4">
+                      <p className="text-xs font-medium uppercase text-[var(--fg-muted)] mb-3">Mindspace</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(details.metadata?.goals ?? []).map((g, i) => (
+                          <span key={`g-${i}`} className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-200">goal: {String(g).slice(0, 24)}{String(g).length > 24 ? "…" : ""}</span>
+                        ))}
+                        {(details.metadata?.fears ?? []).map((f, i) => (
+                          <span key={`f-${i}`} className="rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-xs text-red-200">fear: {String(f).slice(0, 24)}{String(f).length > 24 ? "…" : ""}</span>
+                        ))}
+                        {(details.metadata?.beliefs ?? []).map((b, i) => (
+                          <span key={`b-${i}`} className="rounded-full border border-blue-500/40 bg-blue-500/10 px-2.5 py-1 text-xs text-blue-200">belief: {String(b).slice(0, 24)}{String(b).length > 24 ? "…" : ""}</span>
+                        ))}
+                        {(details.metadata?.desires ?? []).map((d, i) => (
+                          <span key={`d-${i}`} className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-200">desire: {String(d).slice(0, 24)}{String(d).length > 24 ? "…" : ""}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {(details.metadata?.goals ?? [])?.length ? (
                     <div>
                       <h3 className="text-xs font-medium uppercase text-[var(--fg-muted)]">Goals</h3>
@@ -227,5 +257,13 @@ export default function CastPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CastPage() {
+  return (
+    <Suspense fallback={<div className="space-y-6"><Skeleton className="h-8 w-48" /><Skeleton className="h-64 w-full" /></div>}>
+      <CastContent />
+    </Suspense>
   );
 }

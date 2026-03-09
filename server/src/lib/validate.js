@@ -57,6 +57,15 @@ export const narrativeQuerySchema = z.object({
   q: z.string().min(1, "query required").max(2000),
 });
 
+export const oracleSimulateSchema = z.object({
+  character: z.string().min(1, "character required").max(200),
+  situation: z.string().min(1, "situation required").max(2000),
+});
+
+export const storyEchoSchema = z.object({
+  context: z.string().min(1, "context required").max(5000),
+});
+
 // --- Persona ---
 export const recordPersonaSchema = z.object({
   text: z.string().min(1, "text required").max(50000, "text too long"),

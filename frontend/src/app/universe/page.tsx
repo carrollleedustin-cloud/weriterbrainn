@@ -8,6 +8,8 @@ import {
   narrativeCompile,
   narrativePreview,
   narrativeAsk,
+  oracleSimulate,
+  storyEchoes,
   getNarrativeObjects,
   getNarrativeEdges,
   getNarrativeTimeline,
@@ -22,7 +24,8 @@ import { SkeletonGraph } from "@/components/ui/Skeleton";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
-type Tab = "universe" | "compile" | "timeline" | "threads" | "strategy" | "canon" | "qa";
+type Tab = "universe" | "compile" | "timeline" | "threads" | "strategy" | "canon" | "qa" | "oracle" | "heatmap";
+const VALID_TABS: Tab[] = ["universe", "compile", "timeline", "threads", "strategy", "canon", "qa", "oracle", "heatmap"];
 type NarrativeObject = {
   id: string;
   object_type: string;
@@ -120,19 +123,25 @@ function UniverseContent() {
   const [qaQuestion, setQaQuestion] = useState("");
   const [qaResult, setQaResult] = useState<QAResult | null>(null);
   const [qaLoading, setQaLoading] = useState(false);
+  const [oracleCharacter, setOracleCharacter] = useState("");
+  const [oracleSituation, setOracleSituation] = useState("");
+  const [oracleResult, setOracleResult] = useState<QAResult & { character?: string; situation?: string } | null>(null);
+  const [oracleLoading, setOracleLoading] = useState(false);
+  const [echoContext, setEchoContext] = useState("");
+  const [echoResult, setEchoResult] = useState<{ answer?: string; echoes?: Array<{ source?: string; suggestion?: string; emotional_impact?: string }> } | null>(null);
+  const [echoLoading, setEchoLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
-  const validTabs: Tab[] = ["universe", "compile", "timeline", "threads", "strategy", "canon", "qa"];
   const [tab, setTab] = useState<Tab>(
-    tabFromUrl && validTabs.includes(tabFromUrl as Tab) ? (tabFromUrl as Tab) : "universe"
+    tabFromUrl && VALID_TABS.includes(tabFromUrl as Tab) ? (tabFromUrl as Tab) : "universe"
   );
 
   useEffect(() => {
-    if (tabFromUrl && validTabs.includes(tabFromUrl as Tab)) {
+    if (tabFromUrl && VALID_TABS.includes(tabFromUrl as Tab)) {
       setTab(tabFromUrl as Tab);
     }
   }, [tabFromUrl]);
@@ -268,6 +277,37 @@ function UniverseContent() {
     }
   };
 
+  const handleOracleSimulate = async () => {
+    if (!oracleCharacter.trim() || !oracleSituation.trim()) return;
+    setOracleLoading(true);
+    setError(null);
+    try {
+      const r = await oracleSimulate(oracleCharacter.trim(), oracleSituation.trim());
+      setOracleResult(r);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Oracle failed");
+      setOracleResult(null);
+    } finally {
+      setOracleLoading(false);
+    }
+  };
+
+  const handleEchoes = async () => {
+    const ctx = echoContext.trim() || compileText.trim();
+    if (!ctx) return;
+    setEchoLoading(true);
+    setError(null);
+    try {
+      const r = await storyEchoes(ctx);
+      setEchoResult(r);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Echoes failed");
+      setEchoResult(null);
+    } finally {
+      setEchoLoading(false);
+    }
+  };
+
   const handleAsk = async () => {
     if (!qaQuestion.trim()) return;
     setQaLoading(true);
@@ -331,7 +371,7 @@ function UniverseContent() {
       </div>
 
       <nav className="flex flex-wrap gap-2 border-b border-[rgba(139,92,246,0.2)] pb-2">
-        {(["universe", "compile", "timeline", "threads", "strategy", "canon", "qa"] as const).map((t) => (
+        {VALID_TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -341,7 +381,7 @@ function UniverseContent() {
                 : "text-[var(--fg-muted)] hover:bg-[rgba(139,92,246,0.1)]"
             }`}
           >
-            {t === "qa" ? "Story Q&A" : t === "canon" ? "Canon" : t}
+            {t === "qa" ? "Q&A" : t === "canon" ? "Canon" : t === "oracle" ? "Oracle" : t === "heatmap" ? "Heatmap" : t}
           </button>
         ))}
       </nav>
@@ -384,10 +424,10 @@ function UniverseContent() {
           <label className="block text-sm text-[var(--fg-muted)] mb-2">
             Validate new text against canon (Continuity Guardian)
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Textarea
               value={compileText}
-              onChange={(e) => setCompileText(e.target.value)}
+              onChange={(e) => { setCompileText(e.target.value); setEchoContext(e.target.value); }}
               placeholder="Paste new draft text. The compiler will check for continuity issues: dead characters, timeline breaks, lore violations, knowledge leaks."
               rows={4}
               disabled={authRequired}
@@ -407,6 +447,14 @@ function UniverseContent() {
                 className="text-xs"
               >
                 {previewing ? "Previewing..." : "Consequence Preview"}
+              </Button>
+              <Button
+                onClick={handleEchoes}
+                disabled={echoLoading || !compileText.trim() || authRequired}
+                variant="secondary"
+                className="text-xs"
+              >
+                {echoLoading ? "..." : "Story Echoes"}
               </Button>
             </div>
           </div>
@@ -455,6 +503,12 @@ function UniverseContent() {
               </ul>
             ) : (
               <p className="text-[var(--fg-muted)]">No continuity issues detected.</p>
+            )}
+            {echoResult && (
+              <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="text-xs font-medium text-amber-400 mb-2">Story Echoes</p>
+                <p className="text-sm text-[var(--fg-secondary)]">{echoResult.answer || "No echoes."}</p>
+              </div>
             )}
             {previewResult && (
               <div className="mt-4 space-y-4 border-t border-[rgba(139,92,246,0.2)] pt-4">
@@ -630,6 +684,68 @@ function UniverseContent() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+      )}
+
+      {tab === "heatmap" && (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-[var(--fg-primary)]">Narrative Heatmap</h3>
+        <p className="text-sm text-[var(--fg-muted)]">Emotional intensity across your story. Brighter = higher intensity.</p>
+        {timelineEvents.length === 0 ? (
+          <p className="text-[var(--fg-muted)]">No events yet. Extract text to build the timeline.</p>
+        ) : (
+          <div className="flex gap-1 h-12 items-center">
+            {timelineEvents.map((ev, i) => {
+              const intensity = 0.3 + (i % 5) * 0.15 + (ev.caused_by?.length || 0) * 0.1;
+              const op = Math.min(1, intensity);
+              return (
+                <div
+                  key={ev.id}
+                  title={ev.name}
+                  className="flex-1 rounded min-w-[8px] h-10 transition-all hover:scale-105"
+                  style={{ background: `rgba(139,92,246,${op})`, opacity: 0.5 + op * 0.5 }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+      )}
+
+      {tab === "oracle" && (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-[var(--fg-primary)]">AI Narrative Oracle</h3>
+        <p className="text-sm text-[var(--fg-muted)]">Simulate what a character would do. The Oracle reasons from psychology, goals, relationships.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs text-[var(--fg-muted)] mb-1">Character</label>
+            <input
+              type="text"
+              value={oracleCharacter}
+              onChange={(e) => setOracleCharacter(e.target.value)}
+              placeholder="e.g. Marcus"
+              className="w-full rounded-md border border-[rgba(139,92,246,0.3)] bg-[var(--bg-base)] px-3 py-2 text-[var(--fg-primary)] placeholder:text-[var(--fg-muted)]"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs text-[var(--fg-muted)] mb-1">Situation</label>
+            <Textarea
+              value={oracleSituation}
+              onChange={(e) => setOracleSituation(e.target.value)}
+              placeholder="e.g. Sarah just revealed she knew about the dagger. Marcus is alone with her."
+              rows={3}
+            />
+          </div>
+        </div>
+        <Button onClick={handleOracleSimulate} disabled={oracleLoading || !oracleCharacter.trim() || !oracleSituation.trim() || authRequired}>
+          {oracleLoading ? "Simulating…" : "What would they do?"}
+        </Button>
+        {oracleResult && (
+          <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
+            <p className="font-medium text-emerald-200">Oracle: {oracleResult.answer}</p>
+            {oracleResult.reasoning_summary && <p className="text-sm text-[var(--fg-muted)]">{oracleResult.reasoning_summary}</p>}
           </div>
         )}
       </div>

@@ -5,6 +5,8 @@ import {
   narrativeExtractSchema,
   narrativeCompileSchema,
   narrativeQuerySchema,
+  oracleSimulateSchema,
+  storyEchoSchema,
 } from "../../lib/validate.js";
 
 const router = Router();
@@ -168,6 +170,32 @@ router.post("/preview", validate(narrativeCompileSchema), async (req, res) => {
     const { text } = req.validated;
     const context = req.body.context || null;
     const result = await container.consequencePreviewService.preview(text, context, req.userId);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.post("/oracle/simulate", validate(oracleSimulateSchema), async (req, res) => {
+  try {
+    if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
+    const { character, situation } = req.validated;
+    const q = `What would ${character} do in this situation? Simulate their likely response based on their psychology, goals, relationships, and past behavior. Situation: ${situation}`;
+    const result = await container.storyQAService.ask(q, req.userId);
+    res.json({ ...result, character, situation });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ detail: "Internal server error" });
+  }
+});
+
+router.post("/echoes", validate(storyEchoSchema), async (req, res) => {
+  try {
+    if (!req.userId) return res.status(401).json({ detail: "Authentication required" });
+    const { context } = req.validated;
+    const q = `Analyze this story context and suggest powerful callbacks—earlier events, phrases, or motifs that could echo here for emotional resonance. Context: ${context.slice(0, 2000)}. Return JSON: {"echoes":[{"source":"earlier event/location","suggestion":"how to echo it here","emotional_impact":"..."}]}`;
+    const result = await container.storyQAService.ask(q, req.userId);
     res.json(result);
   } catch (err) {
     console.error(err);
