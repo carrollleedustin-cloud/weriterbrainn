@@ -88,16 +88,15 @@ export async function vectorSearch(params: {
 }): Promise<MemorySearchResult[]> {
   const { userId, queryVec, k = 20 } = params;
   const vecLiteral = toVectorLiteral(queryVec);
-  // Using queryRawUnsafe due to pgvector literal; ensure queryVec originates from trusted computation
   const sql = `
     SELECT id, content, "createdAt", importance, tags, type, tier,
-           (1 - (embedding_vec <-> ${vecLiteral})) AS score
+           (1 - (embedding_vec <-> $2::vector)) AS score
     FROM "Memory"
     WHERE "userId" = $1 AND embedding_vec IS NOT NULL
-    ORDER BY embedding_vec <-> ${vecLiteral}
-    LIMIT ${Number(k)}
+    ORDER BY embedding_vec <-> $2::vector
+    LIMIT $3
   `;
-  const rows = await prisma.$queryRawUnsafe<any[]>(sql, userId);
+  const rows = await prisma.$queryRawUnsafe<any[]>(sql, userId, vecLiteral, k);
   const mapped = rows.map((r: any) => ({
     id: r.id,
     type: r.type as MemoryType,

@@ -13,7 +13,9 @@ export function useNIOEvent<E extends EventName>(
   handler: (payload: NIOEventMap[E]) => void
 ): void {
   const handlerRef = useRef(handler);
-  handlerRef.current = handler;
+  useEffect(() => {
+    handlerRef.current = handler;
+  }, [handler]);
 
   useEffect(() => {
     const off = nioBus.on(event, (payload) => {

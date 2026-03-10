@@ -15,12 +15,13 @@ export function useAuth(): {
   clearError: () => void;
 } {
   const store = useAuthStore();
+  const { status, hydrate } = store;
 
   useEffect(() => {
-    if (store.status === "idle") {
-      store.hydrate();
+    if (status === "idle") {
+      hydrate();
     }
-  }, [store.status]);
+  }, [status, hydrate]);
 
   return {
     user: store.user,

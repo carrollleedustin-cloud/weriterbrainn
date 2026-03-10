@@ -1,8 +1,6 @@
 import { prisma } from '../../infrastructure/db/PrismaClient';
-import OpenAI from 'openai';
+import { openai } from '../../infrastructure/ai/openai';
 import { config } from '../../lib/config';
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
 
 type ExtractedEntity = { name: string; type: string; aliases?: string[] };
 

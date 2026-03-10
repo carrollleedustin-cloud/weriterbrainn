@@ -1,7 +1,4 @@
-import OpenAI from 'openai';
-import { config } from '../../lib/config';
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
+import { openai } from './openai';
 
 export async function getTextEmbedding(text: string): Promise<number[]> {
   const res = await openai.embeddings.create({

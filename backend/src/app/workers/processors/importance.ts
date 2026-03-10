@@ -2,10 +2,8 @@ import { createWorker, createQueue, defaultJobOpts } from '../../../infrastructu
 import { QueueNames } from '../../../infrastructure/queues/queueNames';
 import { logger } from '../../../infrastructure/observability/logger';
 import { prisma } from '../../../infrastructure/db/PrismaClient';
-import OpenAI from 'openai';
+import { openai } from '../../../infrastructure/ai/openai';
 import { config } from '../../../lib/config';
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
 const consolidateQueue = createQueue(QueueNames.ConsolidateMemory);
 
 function clamp(n: number, min: number, max: number) { return Math.max(min, Math.min(max, n)); }

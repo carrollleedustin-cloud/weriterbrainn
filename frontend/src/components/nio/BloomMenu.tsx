@@ -28,11 +28,9 @@ function bezierToCenter(cx: number, cy: number, x: number, y: number, curvature:
 export function BloomMenu({
   open,
   onClose,
-  triggerRef,
 }: {
   open: boolean;
   onClose: () => void;
-  triggerRef?: React.RefObject<HTMLElement | null>;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const items = dimensionRegistry.getAll();

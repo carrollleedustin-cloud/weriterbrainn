@@ -1,4 +1,4 @@
-import { prisma } from '../../infrastructure/db/PrismaClient';
+import { PersonaRepository } from '../../infrastructure/repositories/PersonaRepository';
 
 function tokenize(text: string) {
   return text.toLowerCase().match(/[a-zA-Z']+/g) ?? [];
@@ -49,24 +49,19 @@ function sentenceStructureProfile(sents: string[]) {
 }
 
 function formalityScore(tokens: string[]) {
-  const slang = new Set(['lol', 'lmao', 'idk', 'btw', 'imo', 'imho', 'omg', 'brb', 'btw']);
+  const slang = new Set(['lol', 'lmao', 'idk', 'btw', 'imo', 'imho', 'omg', 'brb']);
   const contractions = tokens.filter(t => t.includes("'")).length;
   const slangCount = tokens.filter(t => slang.has(t)).length;
-  const raw = 1 - Math.min(1, (slangCount + contractions) / Math.max(1, tokens.length));
-  return raw;
+  return 1 - Math.min(1, (slangCount + contractions) / Math.max(1, tokens.length));
 }
 
 export class PersonaService {
-  async updateProfile(userId: string) {
-    // Pull last N user-authored memories (episodic + semantic)
-    const mems = await prisma.memory.findMany({
-      where: { userId, type: { in: ['EPISODIC', 'SEMANTIC'] as any } },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-      select: { content: true },
-    });
+  constructor(private repo: PersonaRepository) {}
 
-    const texts = mems.map((m: { content: string }) => m.content).join('\n');
+  async updateProfile(userId: string) {
+    const mems = await this.repo.fetchRecentMemories(userId, 200);
+
+    const texts = mems.map(m => m.content).join('\n');
     const tokens = tokenize(texts);
     const sents = sentenceSplit(texts);
 
@@ -86,17 +81,11 @@ export class PersonaService {
       updatedAt: new Date().toISOString(),
     };
 
-    await prisma.personaProfile.upsert({
-      where: { userId },
-      update: { metrics: metrics as any },
-      create: { userId, metrics: metrics as any },
-    });
-
+    await this.repo.upsertProfile(userId, metrics);
     return metrics;
   }
 
   async getProfile(userId: string) {
-    const p = await prisma.personaProfile.findUnique({ where: { userId } });
-    return p?.metrics ?? null;
+    return this.repo.findProfile(userId);
   }
 }

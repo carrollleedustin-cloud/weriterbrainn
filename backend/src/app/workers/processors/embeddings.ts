@@ -1,12 +1,9 @@
 import { createWorker } from '../../../infrastructure/queues/bullmq';
 import { QueueNames } from '../../../infrastructure/queues/queueNames';
 import { logger } from '../../../infrastructure/observability/logger';
-import OpenAI from 'openai';
-import { config } from '../../../lib/config';
+import { openai } from '../../../infrastructure/ai/openai';
 import { prisma } from '../../../infrastructure/db/PrismaClient';
 import { createQueue, defaultJobOpts } from '../../../infrastructure/queues/bullmq';
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
 const importanceQueue = createQueue(QueueNames.Importance);
 
 createWorker(QueueNames.Embeddings, async (job) => {
@@ -36,12 +33,7 @@ createWorker(QueueNames.Embeddings, async (job) => {
     const vecLiteral = `[${vec.join(',')}]`;
     const bytesHex = Buffer.from(new Float32Array(vec).buffer).toString('hex');
 
-    await prisma.$executeRawUnsafe(
-      `UPDATE "Memory" SET embedding = decode($1, 'hex'), embedding_vec = $2::vector WHERE id = $3`,
-      bytesHex,
-      vecLiteral,
-      mem.id
-    );
+    await prisma.$executeRaw`UPDATE "Memory" SET embedding = decode(${bytesHex}, 'hex'), embedding_vec = ${vecLiteral}::vector WHERE id = ${mem.id}`;
 
     child.info({ dim: vec.length }, 'Embedding stored');
 

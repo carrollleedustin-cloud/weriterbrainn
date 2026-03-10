@@ -2,9 +2,11 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { container } from '../../../container';
 import { RagService } from '../../../services/ai/RagService';
+import { requireUserId } from '../utils/user';
+import { bindRequest } from '../../../infrastructure/observability/logger';
 
 const RetrieveSchema = z.object({
-  userId: z.string().min(1),
+  userId: z.string().min(1).optional(),
   q: z.string().min(1),
   k: z.coerce.number().min(1).max(100).optional(),
   filters: z.object({
@@ -39,7 +41,11 @@ export async function registerChatRoutes(app: FastifyInstance) {
     if (!parse.success) {
       return reply.code(400).send({ error: 'Invalid payload', details: parse.error.flatten() });
     }
-    const out = await rag.retrieve(parse.data);
+    const userId = requireUserId(req, reply, parse.data.userId);
+    if (!userId) return;
+    const log = bindRequest(req);
+    const out = await rag.retrieve({ ...parse.data, userId });
+    log.info({ userId, query: parse.data.q, results: out.results.length }, 'Chat retrieval served');
     return reply.send(out);
   });
 }

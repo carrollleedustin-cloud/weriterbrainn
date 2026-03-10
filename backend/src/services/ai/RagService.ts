@@ -4,10 +4,8 @@ import { IRerankerClient, NoopReranker } from '../../infrastructure/ai/RerankerC
 import { StrategyService } from '../analytics/StrategyService';
 import { redis } from '../../infrastructure/cache/redis';
 import { createHash } from 'crypto';
-import OpenAI from 'openai';
+import { openai } from '../../infrastructure/ai/openai';
 import { config } from '../../lib/config';
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
 
 export interface RetrieveRequest {
   userId: string;

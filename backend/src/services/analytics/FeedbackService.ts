@@ -1,9 +1,11 @@
-import { prisma } from '../../infrastructure/db/PrismaClient';
+import { FeedbackRepository, FeedbackType } from '../../infrastructure/repositories/FeedbackRepository';
 
-export type FeedbackType = 'accepted' | 'regenerated' | 'edited' | 'corrected';
+export { FeedbackType } from '../../infrastructure/repositories/FeedbackRepository';
 
 export class FeedbackService {
+  constructor(private repo: FeedbackRepository) {}
+
   async track(userId: string, eventType: FeedbackType, context?: Record<string, unknown>) {
-    await prisma.feedbackEvent.create({ data: { userId, eventType, context: (context as any) ?? undefined } });
+    await this.repo.create(userId, eventType, context);
   }
 }

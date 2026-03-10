@@ -14,11 +14,11 @@ export interface NIOEventMap {
   // Auth lifecycle
   "auth:hydrated": { userId: string | null; status: string };
   "auth:login": { userId: string; email: string };
-  "auth:logout": {};
+  "auth:logout": Record<string, never>;
   "auth:error": { message: string };
 
   // Narrative data lifecycle
-  "narrative:loading": {};
+  "narrative:loading": Record<string, never>;
   "narrative:loaded": { source: "api" | "demo" | "hybrid"; entityCount: number };
   "narrative:error": { message: string };
   "narrative:health:updated": { field: string; value: number };
@@ -56,7 +56,7 @@ export interface NIOEventMap {
   "dimension:unregistered": { id: string };
 
   // System diagnostics
-  "system:ready": {};
+  "system:ready": Record<string, never>;
   "system:error": { message: string; source: string };
 }
 

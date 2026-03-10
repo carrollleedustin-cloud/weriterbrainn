@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 
 type Seed = { character: string; conflict: string; change: string };
 
-const BURST_ORBITS = 12;
 const NODES_PER_ORBIT = [3, 6, 9, 12];
 
 export function GenesisBurst({ seed }: { seed: Seed }) {
@@ -59,6 +58,16 @@ export function GenesisBurst({ seed }: { seed: Seed }) {
                   className="animate-pulse"
                   style={{ filter: "drop-shadow(0 0 4px rgba(139,92,246,0.6))" }}
                 />
+                <text
+                  x={x}
+                  y={y - 8}
+                  textAnchor="middle"
+                  fontSize="5"
+                  fill="rgba(255,255,255,0.7)"
+                  style={{ letterSpacing: "0.08em" }}
+                >
+                  {label}
+                </text>
               </motion.g>
             );
           });

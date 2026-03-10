@@ -17,4 +17,8 @@ export const config = {
   redisUrl: requireEnv('REDIS_URL', 'redis://127.0.0.1:6379'),
 
   openaiApiKey: requireEnv('OPENAI_API_KEY', ''),
+  // Optional API key for simple auth; when empty, auth check is disabled
+  apiKey: process.env.API_KEY ?? '',
+  // Optional JWT secret for Bearer auth; when empty, JWT auth is disabled
+  jwtSecret: process.env.JWT_SECRET ?? '',
 };

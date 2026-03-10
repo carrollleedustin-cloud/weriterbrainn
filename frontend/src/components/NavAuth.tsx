@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NavAuth() {
-  const { user, status, logout } = useAuthStore();
+  const { user, status, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {

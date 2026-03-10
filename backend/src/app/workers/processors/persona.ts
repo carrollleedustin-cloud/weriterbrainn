@@ -1,9 +1,10 @@
 import { createWorker } from '../../../infrastructure/queues/bullmq';
 import { QueueNames } from '../../../infrastructure/queues/queueNames';
 import { logger } from '../../../infrastructure/observability/logger';
+import { PersonaRepository } from '../../../infrastructure/repositories/PersonaRepository';
 import { PersonaService } from '../../../services/persona/PersonaService';
 
-const persona = new PersonaService();
+const persona = new PersonaService(new PersonaRepository());
 
 createWorker(QueueNames.Persona, async (job: { id?: string | number; data: { userId: string } }) => {
   const { userId } = job.data as { userId: string };

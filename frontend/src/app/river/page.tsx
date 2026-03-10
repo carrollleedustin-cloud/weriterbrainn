@@ -33,7 +33,7 @@ export default function RiverPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!isAuthenticated) { setLoading(false); return; }
+    if (!isAuthenticated) { setTimeout(() => setLoading(false), 0); return; }
     getNarrativeTimeline()
       .then((r) => setEvents(r.events || []))
       .catch(() => setEvents([]))

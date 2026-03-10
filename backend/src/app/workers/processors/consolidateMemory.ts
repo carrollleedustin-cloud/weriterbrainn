@@ -2,10 +2,8 @@ import { createWorker, createQueue, defaultJobOpts } from '../../../infrastructu
 import { QueueNames } from '../../../infrastructure/queues/queueNames';
 import { logger } from '../../../infrastructure/observability/logger';
 import { prisma } from '../../../infrastructure/db/PrismaClient';
-import OpenAI from 'openai';
+import { openai } from '../../../infrastructure/ai/openai';
 import { config } from '../../../lib/config';
-
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
 const kgQueue = createQueue(QueueNames.KnowledgeGraph);
 
 createWorker(QueueNames.ConsolidateMemory, async (job: { id?: string | number; data: { userId: string } }) => {

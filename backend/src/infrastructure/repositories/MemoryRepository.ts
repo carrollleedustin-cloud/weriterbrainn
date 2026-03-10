@@ -35,13 +35,9 @@ export class MemoryRepository {
   }
 
   async setEmbedding(memoryId: string, embedding: number[]) {
-    // store embedding both in prisma Bytes and raw vector column via SQL
-    await prisma.$executeRawUnsafe(
-      `UPDATE "Memory" SET embedding = decode($1, 'hex'), embedding_vec = $2 WHERE id = $3`,
-      Buffer.from(new Float32Array(embedding).buffer).toString('hex'),
-      // pgvector expects array literal; use CAST to vector
-      `[$${embedding.join(',')}]`,
-      memoryId
-    );
+    // Store embedding both in prisma Bytes and pgvector column using parameterized query
+    const bytesHex = Buffer.from(new Float32Array(embedding).buffer).toString('hex');
+    const vecLiteral = `[${embedding.join(',')}]`;
+    await prisma.$executeRaw`UPDATE "Memory" SET embedding = decode(${bytesHex}, 'hex'), embedding_vec = ${vecLiteral}::vector WHERE id = ${memoryId}`;
   }
 }

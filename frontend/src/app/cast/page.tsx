@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getNarrativeCharacters, getCharacterDetails } from "@/lib/api";
-import { useAuthStore } from "@/store/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { DimensionHeader } from "@/components/nio/DimensionHeader";
 import { AuthGate } from "@/components/nio/AuthGate";
@@ -16,11 +16,11 @@ function CastContent() {
   const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [details, setDetails] = useState<CharacterDetailView | null>(null);
   const [loading, setLoading] = useState(true);
-  const authStatus = useAuthStore((s) => s.status);
+  const { status: authStatus } = useAuth();
 
   useEffect(() => {
     if (authStatus === "idle" || authStatus === "loading") return;
-    if (authStatus === "anonymous") { setLoading(false); return; }
+    if (authStatus === "anonymous") { setTimeout(() => setLoading(false), 0); return; }
     getNarrativeCharacters()
       .then(setCharacters)
       .catch(() => setCharacters([]))

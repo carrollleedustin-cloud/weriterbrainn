@@ -16,3 +16,10 @@ export const logger = pino({
 export function withContext(base: Record<string, unknown>) {
   return logger.child(base);
 }
+
+export function bindRequest(req: { requestId?: string; userId?: string }) {
+  const bindings: Record<string, unknown> = {};
+  if (req.requestId) bindings.requestId = req.requestId;
+  if (req.userId) bindings.userId = req.userId;
+  return logger.child(bindings);
+}

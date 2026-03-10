@@ -1,4 +1,4 @@
-import { prisma } from '../../infrastructure/db/PrismaClient';
+import { StrategyRepository } from '../../infrastructure/repositories/StrategyRepository';
 import { redis } from '../../infrastructure/cache/redis';
 
 export type ArmName = 'baseline' | 'rerank-heavy' | 'recency-boost' | 'importance-boost';
@@ -22,46 +22,56 @@ function emaUpdate(prev: number, val: number, alpha = 0.2) {
   return alpha * val + (1 - alpha) * prev;
 }
 
-function key(userId: string, arm: ArmName) {
+function emaKey(userId: string, arm: ArmName) {
   return `arm:ema:${userId}:${arm}`;
 }
 
 export class StrategyService {
+  constructor(private repo: StrategyRepository) {}
+
   async getCurrent(userId: string) {
-    const s = await prisma.userRetrievalStrategy.findUnique({ where: { userId } });
+    const s = await this.repo.findByUserId(userId);
     if (!s) return { arm: 'baseline' as ArmName, ...ARM_CONFIG['baseline'] };
-    const weights = (s.weights as any) ?? ARM_CONFIG['baseline'].weights;
-    return { arm: s.arm as ArmName, weights, rerankEnabled: s.rerankEnabled, llmRewriteEnabled: (s as any).llmRewriteEnabled ?? true, maxVariants: (s as any).maxVariants ?? 5, tokenBudget: (s as any).tokenBudget ?? 1024 };
+    const weights = s.weights ?? ARM_CONFIG['baseline'].weights;
+    return {
+      arm: s.arm as ArmName,
+      weights,
+      rerankEnabled: s.rerankEnabled,
+      llmRewriteEnabled: s.llmRewriteEnabled ?? true,
+      maxVariants: s.maxVariants ?? 5,
+      tokenBudget: s.tokenBudget ?? 1024,
+    };
   }
 
   async selectNext(userId: string, epsilon = 0.2) {
-    // Exploration vs exploitation using EMAs in Redis
     const arms = Object.keys(ARM_CONFIG) as ArmName[];
-    // With probability epsilon, explore randomly
     let chosen: ArmName | null = null;
+
     if (Math.random() < epsilon) {
       chosen = arms[Math.floor(Math.random() * arms.length)];
     } else {
-      // Exploit: pick arm with highest EMA
       let best = -Infinity;
       for (const arm of arms) {
-        const v = Number(await redis.get(key(userId, arm))) || 0;
+        const v = Number(await redis.get(emaKey(userId, arm))) || 0;
         if (v > best) { best = v; chosen = arm; }
       }
       if (!chosen) chosen = 'baseline';
     }
 
     const cfg = ARM_CONFIG[chosen];
-    await prisma.userRetrievalStrategy.upsert({
-      where: { userId },
-      update: { arm: chosen, weights: cfg.weights as any, rerankEnabled: cfg.rerankEnabled, llmRewriteEnabled: cfg.llmRewriteEnabled as any, maxVariants: cfg.maxVariants as any, tokenBudget: cfg.tokenBudget as any },
-      create: { userId, arm: chosen, weights: cfg.weights as any, rerankEnabled: cfg.rerankEnabled, llmRewriteEnabled: cfg.llmRewriteEnabled as any, maxVariants: cfg.maxVariants as any, tokenBudget: cfg.tokenBudget as any },
+    await this.repo.upsert(userId, {
+      arm: chosen,
+      weights: cfg.weights as Record<string, number>,
+      rerankEnabled: cfg.rerankEnabled,
+      llmRewriteEnabled: cfg.llmRewriteEnabled,
+      maxVariants: cfg.maxVariants,
+      tokenBudget: cfg.tokenBudget,
     });
     return { arm: chosen, ...cfg };
   }
 
   async recordReward(userId: string, arm: ArmName, reward: number) {
-    const k = key(userId, arm);
+    const k = emaKey(userId, arm);
     const prev = Number(await redis.get(k)) || 0;
     const next = emaUpdate(prev, reward, 0.2);
     await redis.set(k, String(next));
