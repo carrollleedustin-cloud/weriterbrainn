@@ -3,14 +3,17 @@
 import { useEffect } from "react";
 
 const SHORTCUTS = [
-  { keys: ["⌘/Ctrl", "K"], desc: "Focus chat" },
-  { keys: ["⌘/Ctrl", "1"], desc: "Home" },
-  { keys: ["⌘/Ctrl", "2"], desc: "AI Chat" },
-  { keys: ["⌘/Ctrl", "3"], desc: "Memories" },
-  { keys: ["⌘/Ctrl", "4"], desc: "Knowledge Graph" },
-  { keys: ["⌘/Ctrl", "5"], desc: "Writing" },
-  { keys: ["⌘/Ctrl", "6"], desc: "Analytics" },
-  { keys: ["⌘/Ctrl", "Enter"], desc: "Send message (chat)" },
+  { keys: ["⌘/Ctrl", "K"], desc: "Focus Oracle chat" },
+  { keys: ["⌘/Ctrl", "1"], desc: "Nexus" },
+  { keys: ["⌘/Ctrl", "2"], desc: "Story Cosmos" },
+  { keys: ["⌘/Ctrl", "3"], desc: "River of Time" },
+  { keys: ["⌘/Ctrl", "4"], desc: "Loom of Fate" },
+  { keys: ["⌘/Ctrl", "5"], desc: "Character Mindspace" },
+  { keys: ["⌘/Ctrl", "6"], desc: "Living Forge" },
+  { keys: ["⌘/Ctrl", "7"], desc: "Oracle" },
+  { keys: ["⌘/Ctrl", "8"], desc: "Ascend" },
+  { keys: ["⌘/Ctrl", "9"], desc: "Simulation Chamber" },
+  { keys: ["⌘/Ctrl", "Enter"], desc: "Send message (Oracle)" },
   { keys: ["?"], desc: "Show shortcuts" },
 ];
 

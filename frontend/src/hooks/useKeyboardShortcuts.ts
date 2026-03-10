@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { dimensionRegistry } from "@/lib/dimension-registry";
 
 type ShortcutHandler = () => void;
 
-/** Global keyboard shortcuts: Cmd/Ctrl+K focus chat, Cmd/Ctrl+1–6 nav, ? for help. */
 export function useGlobalShortcuts() {
   const router = useRouter();
 
@@ -24,11 +24,12 @@ export function useGlobalShortcuts() {
         return;
       }
 
-      if (mod && e.key >= "1" && e.key <= "6") {
+      if (mod && e.key >= "1" && e.key <= "9") {
         e.preventDefault();
-        const routes = ["/", "/chat", "/memories", "/graph", "/writing", "/analytics"];
-        const idx = parseInt(e.key, 10) - 1;
-        if (routes[idx]) router.push(routes[idx]);
+        const idx = parseInt(e.key, 10);
+        const shortcutMap = dimensionRegistry.getShortcutMap();
+        const target = shortcutMap[idx];
+        if (target) router.push(target);
         return;
       }
 
@@ -46,7 +47,6 @@ export function useGlobalShortcuts() {
   }, [router]);
 }
 
-/** Chat-specific shortcuts: Cmd/Ctrl+Enter to send. */
 export function useChatShortcuts(options: {
   onSend?: ShortcutHandler;
   onClear?: ShortcutHandler;

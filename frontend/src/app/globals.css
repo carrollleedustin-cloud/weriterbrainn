@@ -637,3 +637,113 @@ body::before {
 .storm-node:nth-child(1) { top: 20px; left: 30px; }
 .storm-node:nth-child(2) { top: 40px; right: 40px; }
 .storm-node:nth-child(3) { bottom: 18px; left: 50%; transform: translateX(-50%); }
+
+/* NIO-OS: Destabilization — narrative logic breaks surface as fracture, not generic error */
+@keyframes destabilize {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  10% { transform: translateX(-1px) translateY(0); opacity: 0.95; }
+  20% { transform: translateX(1px) translateY(-1px); opacity: 1; }
+  30% { transform: translateX(0) translateY(0); opacity: 0.98; }
+  40% { transform: translateX(1px) translateY(1px); opacity: 1; }
+  50% { transform: translateX(-1px) translateY(0); opacity: 0.96; }
+}
+.destabilization {
+  animation: destabilize 0.4s ease-out;
+}
+
+/* NIO-OS: Orbit dial — circular gravity calibration */
+.orbit-dial {
+  box-shadow: inset 0 0 12px rgba(139,92,246,0.2), 0 0 16px rgba(139,92,246,0.15);
+}
+
+/* NIO-OS: Motion tokens — bloom, drift, ignite, phase, pulse, compress, resonate, fracture, recover */
+@keyframes nio-bloom {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes nio-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+@keyframes nio-ignite {
+  0% { filter: brightness(0.8); }
+  50% { filter: brightness(1.2); }
+  100% { filter: brightness(1); }
+}
+@keyframes nio-drift {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-3px) translateX(2px); }
+  66% { transform: translateY(2px) translateX(-1px); }
+}
+@keyframes nio-phase {
+  0% { opacity: 1; filter: blur(0); }
+  50% { opacity: 0.6; filter: blur(1px); }
+  100% { opacity: 1; filter: blur(0); }
+}
+@keyframes nio-compress {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+}
+@keyframes nio-resonate {
+  0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(139, 92, 246, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+}
+@keyframes nio-fracture {
+  0% { transform: translateX(0); clip-path: inset(0); }
+  25% { transform: translateX(-2px); clip-path: inset(0 0 50% 0); }
+  50% { transform: translateX(2px); clip-path: inset(50% 0 0 0); }
+  75% { transform: translateX(-1px); clip-path: inset(0); }
+  100% { transform: translateX(0); clip-path: inset(0); }
+}
+@keyframes nio-recover {
+  0% { opacity: 0.4; filter: saturate(0); }
+  100% { opacity: 1; filter: saturate(1); }
+}
+.animate-nio-bloom { animation: nio-bloom 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+.animate-nio-pulse { animation: nio-pulse 2.5s ease-in-out infinite; }
+.animate-nio-ignite { animation: nio-ignite 0.8s ease-out; }
+.animate-nio-drift { animation: nio-drift 6s ease-in-out infinite; }
+.animate-nio-phase { animation: nio-phase 3s ease-in-out; }
+.animate-nio-compress { animation: nio-compress 2s ease-in-out infinite; }
+.animate-nio-resonate { animation: nio-resonate 2s ease-in-out infinite; }
+.animate-nio-fracture { animation: nio-fracture 0.3s ease-out; }
+.animate-nio-recover { animation: nio-recover 0.6s ease-out forwards; }
+
+/* Dimension nav strip */
+.dimension-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 7, 16, 0.6);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+.dimension-nav::-webkit-scrollbar { display: none; }
+.dimension-nav-item {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.dimension-nav-item:hover {
+  color: var(--fg-primary);
+  background: rgba(139, 92, 246, 0.12);
+}
+.dimension-nav-item-active {
+  color: var(--fg-primary);
+  background: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+}
+
+/* Thought Cursor mode — subtle cursor cue */
+[data-cursor-mode="weave"] { cursor: crosshair; }
+[data-cursor-mode="cut"] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") 12 12, crosshair; }
+[data-cursor-mode="invoke"] { cursor: pointer; }

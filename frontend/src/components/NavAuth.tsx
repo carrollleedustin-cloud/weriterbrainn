@@ -1,31 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getMe } from "@/lib/api";
-import { clearToken } from "@/lib/auth";
+import { useAuthStore } from "@/store/auth";
 
 export default function NavAuth() {
-  const [user, setUser] = useState<{ email: string; display_name?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, status, logout } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    getMe()
-      .then((u) => setUser(u))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
-
   const handleLogout = () => {
-    clearToken();
-    setUser(null);
+    logout();
     router.push("/");
-    router.refresh();
   };
 
-  if (loading) return <span className="text-[var(--fg-muted)]">...</span>;
+  if (status === "idle" || status === "loading") {
+    return <span className="text-[var(--fg-muted)]">...</span>;
+  }
+
   if (user) {
     return (
       <div className="flex items-center gap-4">
@@ -42,6 +33,7 @@ export default function NavAuth() {
       </div>
     );
   }
+
   return (
     <div className="flex gap-4">
       <Link

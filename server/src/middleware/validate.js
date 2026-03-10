@@ -10,9 +10,14 @@ export function validate(schema, source = "body") {
       req.validated = result.data;
       next();
     } else {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      const first = Object.entries(fieldErrors)[0];
+      const detail = first
+        ? `${first[0]}: ${Array.isArray(first[1]) ? first[1][0] : first[1]}`
+        : "Validation failed";
       res.status(400).json({
-        detail: "Validation failed",
-        errors: result.error.flatten().fieldErrors,
+        detail,
+        errors: fieldErrors,
       });
     }
   };

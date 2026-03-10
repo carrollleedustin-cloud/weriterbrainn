@@ -6,6 +6,8 @@ import { useChatShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { DestabilizationOverlay } from "@/components/nio/DestabilizationOverlay";
+import { DimensionHeader } from "@/components/nio/DimensionHeader";
 
 type Message = { role: "user" | "assistant"; content: string; citations?: Citation[] };
 
@@ -118,23 +120,21 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-12rem)] flex-col animate-fade-in">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg-primary)]">
-            AI Chat
-          </h1>
-          <p className="text-sm text-[var(--fg-muted)]">Streaming cognition with memory fusion.</p>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-[rgba(139,92,246,0.3)] bg-[rgba(139,92,246,0.12)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--fg-secondary)]">
-          Synapse Live
-        </div>
-      </div>
+      <DimensionHeader
+        title={<span className="gradient-text">Oracle</span>}
+        subtitle="Embedded narrative intelligence — continuity, consequences, world-state questions."
+        stats={
+          <div className="flex items-center gap-2 rounded-full border border-[rgba(139,92,246,0.3)] bg-[rgba(139,92,246,0.12)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--fg-secondary)]">
+            Active
+          </div>
+        }
+      />
+      <div className="mb-2" />
 
       <div className="flex-1 overflow-y-auto rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.25)] bg-[linear-gradient(180deg,rgba(20,16,32,0.9),rgba(10,8,18,0.95))] p-4 shadow-[var(--shadow-md)]">
         {messages.length === 0 && !loading && (
           <div className="rounded-[var(--radius-lg)] border border-[rgba(139,92,246,0.2)] bg-[rgba(139,92,246,0.08)] p-4 text-[var(--fg-secondary)]">
-            Send a message to start. Your brain remembers context from memories, conversations,
-            and the knowledge graph.
+            Invoke the Oracle. Ask about world state, continuity, consequences, character psychology.
           </div>
         )}
         {messages.map((msg, i) => (
@@ -158,9 +158,7 @@ export default function ChatPage() {
           />
         )}
         {error && (
-          <div className="rounded-[var(--radius-md)] border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-            {error}
-          </div>
+          <DestabilizationOverlay message={error} onDismiss={() => setError(null)} />
         )}
         <div ref={endRef} />
       </div>
@@ -179,7 +177,7 @@ export default function ChatPage() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Message your brain..."
+            placeholder="Ask the Oracle..."
             disabled={loading}
             autoFocus
             aria-label="Chat message input"
